@@ -363,6 +363,38 @@
     .btn-outline:hover { background: var(--mini-box-bg); }
     .btn-danger-soft { background: var(--danger-light); color: var(--danger-red); }
 
+    /* Hold 3 Detik Reset Button */
+    .btn-hold-reset {
+      position: relative;
+      overflow: hidden;
+      background: var(--danger-light);
+      color: var(--danger-red);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .btn-hold-reset .hold-bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: rgba(200, 75, 49, 0.28);
+      pointer-events: none;
+      transition: none;
+    }
+
+    .btn-hold-reset.holding .hold-bar {
+      width: 100%;
+      transition: width 3s linear;
+    }
+
+    .btn-hold-reset span.hold-label {
+      position: relative;
+      z-index: 1;
+    }
+
     .section-title {
       font-size: 1.1rem;
       font-weight: 800;
@@ -816,6 +848,10 @@
       color: var(--text-muted);
     }
 
+    .custom-alarm-info span strong {
+      display: inline;
+    }
+
     /* Evaluasi Detail Card List */
     .eval-unit-box {
       background: var(--mini-box-bg);
@@ -1144,7 +1180,12 @@
         <button class="btn btn-outline" onclick="exportBackupJSON()">💾 Backup Data</button>
         <button class="btn btn-outline" onclick="document.getElementById('importFileInput').click()">📂 Restore Data</button>
         <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importBackupJSON(event)">
-        <button class="btn btn-outline" onclick="resetDemoData()">🔄 Reset Contoh</button>
+        <button type="button" class="btn btn-hold-reset" id="btnResetHold"
+          onmousedown="startHoldReset()" onmouseup="cancelHoldReset()" onmouseleave="cancelHoldReset()"
+          ontouchstart="startHoldReset(event)" ontouchend="cancelHoldReset()" ontouchcancel="cancelHoldReset()">
+          <span class="hold-bar" id="holdResetBar"></span>
+          <span class="hold-label" id="holdResetText">🗑️ Tahan 3 Detik: Reset ke 0</span>
+        </button>
       </div>
 
       <!-- Daftar 6 Kontrakan -->
@@ -1185,6 +1226,7 @@
               <option value="Maintenance Rutin">Maintenance Rutin</option>
               <option value="Maintenance Tidak Rutin">Maintenance Tidak Rutin</option>
               <option value="Koreksi PIN">Koreksi Admin (PIN)</option>
+              <option value="Arsip Kontrak">Arsip Kontrak Selesai</option>
             </select>
           </div>
           <div class="select-wrap">
@@ -1610,12 +1652,18 @@
         </p>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Simpan Perubahan</button>
+
+        <div style="margin-top: 16px; padding-top: 14px; border-top: 1.5px dashed var(--border-soft);">
+          <button type="button" class="btn btn-danger-soft" style="width: 100%; justify-content: center;" onclick="vacateSingleUnit()">
+            🚪 Selesai Kontrak / Kosongkan Unit Ini (Riwayat Mutasi Tetap Aman)
+          </button>
+        </div>
       </form>
     </div>
   </div>
 
   <script>
-    // Tempel URL Web App Google Apps Script kamu di sini agar auto-sync ke Google Sheets:
+    // URL Web App Google Apps Script (Sudah tertanam & siap sinkronisasi 3 tab)
     const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzyj1So4Lh7R83UOK5VW4tbQI8XLru9T1tr7wM20WNSCsmTM6zctZ3WORrClxd6ORXg/exec";
 
     function getActiveAlarmsForSync() {
@@ -1647,8 +1695,11 @@
 
       customAlarms.forEach(ca => {
         const occ = getNextMonthlyOccurrenceInfo(ca.dayOfMonth);
+        const isDone = Array.isArray(ca.paidCycles) && ca.paidCycles.includes(occ.cycleKey);
         if (occ.diffDays <= ca.leadDays) {
-          const waktu = occ.diffDays < 0 ? `Lewat ${Math.abs(occ.diffDays)} hari` : (occ.diffDays === 0 ? "Hari Ini" : `H-${occ.diffDays}`);
+          const waktu = isDone
+            ? `✅ DONE (${occ.dateStr})`
+            : (occ.diffDays < 0 ? `Lewat ${Math.abs(occ.diffDays)} hari` : (occ.diffDays === 0 ? "Hari Ini" : `H-${occ.diffDays}`));
           list.push({
             category: "Jadwal Rutin",
             title: `${ca.title} (Tiap Tgl ${ca.dayOfMonth})`,
@@ -1681,141 +1732,21 @@
       "Maintenance Tidak Rutin": ["Tukang (Atap Bocor)", "Perbaikan Keran / Pipa", "Cat Ulang Dinding", "Perbaikan Kunci / Pintu"]
     };
 
-    // Pengingat Rutin Bulanan Custom (Bisa ditambah & dihapus dari tombol + Atur Pengingat Rutin)
-    const defaultCustomAlarms = [
-      { id: 101, title: "Tagihan WiFi Bersama Komplek", dayOfMonth: 20, leadDays: 7, note: "Internet 1 komplek (6 kontrakan)" },
-      { id: 102, title: "Bayar Tukang Kebun & Kebersihan", dayOfMonth: 5, leadDays: 7, note: "Perawatan rumput & area depan rutin" }
-    ];
+    // Data awal bersih dari 0 (siap digunakan langsung oleh owner)
+    const defaultCustomAlarms = [];
 
     const defaultHouses = [
-      {
-        id: 1,
-        name: "Kontrakan 01",
-        tenant: "Bpk. Andi Wijaya",
-        phone: "6281234567801",
-        email: "andi.wijaya@email.com",
-        targetPrice: 150000000,
-        dpAmount: 0,
-        paidAmount: 150000000,
-        depositAmount: 5000000,
-        expenseAmount: 1200000,
-        scheme: "Lunas Tahunan (1x)",
-        installmentCount: 1,
-        perTermAmount: 150000000,
-        startDate: "2026-01-15",
-        endDate: "2027-01-15",
-        nextDueDate: "",
-        lastPaidDate: "2026-01-15"
-      },
-      {
-        id: 2,
-        name: "Kontrakan 02",
-        tenant: "Ibu Rina Kartika",
-        phone: "6281234567802",
-        email: "rina.k@email.com",
-        targetPrice: 120000000,
-        dpAmount: 0,
-        paidAmount: 80000000,
-        depositAmount: 4000000,
-        expenseAmount: 1700000,
-        scheme: "Per 4 Bulan (3x)",
-        installmentCount: 3,
-        perTermAmount: 40000000,
-        startDate: "2026-03-20",
-        endDate: "2027-03-20",
-        nextDueDate: "2026-11-20",
-        lastPaidDate: "2026-07-20"
-      },
-      {
-        id: 3,
-        name: "Kontrakan 03",
-        tenant: "Bpk. Budi Santoso",
-        phone: "6281234567803",
-        email: "",
-        targetPrice: 135000000,
-        dpAmount: 15000000,
-        paidAmount: 45000000,
-        depositAmount: 5000000,
-        expenseAmount: 4600000,
-        scheme: "DP + 4x (Per 3 Bln)",
-        installmentCount: 4,
-        perTermAmount: 30000000,
-        startDate: "2026-05-01",
-        endDate: "2027-05-01",
-        nextDueDate: "2026-11-21",
-        lastPaidDate: "2026-08-21"
-      },
-      {
-        id: 4,
-        name: "Kontrakan 04",
-        tenant: "Keluarga Dimas",
-        phone: "6281234567804",
-        email: "dimas.kel@email.com",
-        targetPrice: 110000000,
-        dpAmount: 0,
-        paidAmount: 110000000,
-        depositAmount: 3500000,
-        expenseAmount: 800000,
-        scheme: "Per 6 Bulan (2x)",
-        installmentCount: 2,
-        perTermAmount: 55000000,
-        startDate: "2025-11-22",
-        endDate: "2026-11-22",
-        nextDueDate: "",
-        lastPaidDate: "2026-05-22"
-      },
-      {
-        id: 5,
-        name: "Kontrakan 05",
-        tenant: "Ibu Sari Dewi",
-        phone: "6281234567805",
-        email: "",
-        targetPrice: 125000000,
-        dpAmount: 0,
-        paidAmount: 62500000,
-        depositAmount: 4000000,
-        expenseAmount: 1950000,
-        scheme: "Per 6 Bulan (2x)",
-        installmentCount: 2,
-        perTermAmount: 62500000,
-        startDate: "2026-06-10",
-        endDate: "2027-06-10",
-        nextDueDate: "2026-12-10",
-        lastPaidDate: "2026-06-10"
-      },
-      {
-        id: 6,
-        name: "Kontrakan 06",
-        tenant: "",
-        phone: "",
-        email: "",
-        targetPrice: 115000000,
-        dpAmount: 0,
-        paidAmount: 0,
-        depositAmount: 0,
-        expenseAmount: 0,
-        scheme: "Per Bulan (12x)",
-        installmentCount: 12,
-        perTermAmount: 9583333,
-        startDate: "",
-        endDate: "",
-        nextDueDate: "",
-        lastPaidDate: ""
-      }
+      { id: 1, name: "Kontrakan 01", tenant: "", phone: "", email: "", targetPrice: 0, dpAmount: 0, paidAmount: 0, depositAmount: 0, expenseAmount: 0, scheme: "Per Bulan (12x)", installmentCount: 12, perTermAmount: 0, startDate: "", endDate: "", nextDueDate: "", lastPaidDate: "" },
+      { id: 2, name: "Kontrakan 02", tenant: "", phone: "", email: "", targetPrice: 0, dpAmount: 0, paidAmount: 0, depositAmount: 0, expenseAmount: 0, scheme: "Per Bulan (12x)", installmentCount: 12, perTermAmount: 0, startDate: "", endDate: "", nextDueDate: "", lastPaidDate: "" },
+      { id: 3, name: "Kontrakan 03", tenant: "", phone: "", email: "", targetPrice: 0, dpAmount: 0, paidAmount: 0, depositAmount: 0, expenseAmount: 0, scheme: "Per Bulan (12x)", installmentCount: 12, perTermAmount: 0, startDate: "", endDate: "", nextDueDate: "", lastPaidDate: "" },
+      { id: 4, name: "Kontrakan 04", tenant: "", phone: "", email: "", targetPrice: 0, dpAmount: 0, paidAmount: 0, depositAmount: 0, expenseAmount: 0, scheme: "Per Bulan (12x)", installmentCount: 12, perTermAmount: 0, startDate: "", endDate: "", nextDueDate: "", lastPaidDate: "" },
+      { id: 5, name: "Kontrakan 05", tenant: "", phone: "", email: "", targetPrice: 0, dpAmount: 0, paidAmount: 0, depositAmount: 0, expenseAmount: 0, scheme: "Per Bulan (12x)", installmentCount: 12, perTermAmount: 0, startDate: "", endDate: "", nextDueDate: "", lastPaidDate: "" },
+      { id: 6, name: "Kontrakan 06", tenant: "", phone: "", email: "", targetPrice: 0, dpAmount: 0, paidAmount: 0, depositAmount: 0, expenseAmount: 0, scheme: "Per Bulan (12x)", installmentCount: 12, perTermAmount: 0, startDate: "", endDate: "", nextDueDate: "", lastPaidDate: "" }
     ];
 
-    const defaultSharedExpense = 1150000;
+    const defaultSharedExpense = 0;
 
-    const defaultHistory = [
-      { date: "2026-11-10", houseId: 3, unit: "Kontrakan 03", category: "Maintenance Tidak Rutin", subItem: "Tukang (Atap Bocor)", note: "Perbaikan talang & genteng", amount: 2850000, type: "out" },
-      { date: "2026-11-05", houseId: "ALL", unit: "Kas Owner (Bersama)", category: "Pengeluaran Rutin", subItem: "WiFi Bersama Komplek", note: "Tagihan internet 1 komplek (6 kontrakan)", amount: 900000, type: "out" },
-      { date: "2026-11-02", houseId: "ALL", unit: "Kas Owner (Bersama)", category: "Pengeluaran Rutin", subItem: "Tukang Sampah Komplek", note: "Iuran kebersihan sampah 1 komplek", amount: 250000, type: "out" },
-      { date: "2026-10-18", houseId: 3, unit: "Kontrakan 03", category: "Maintenance Rutin", subItem: "Servis AC", note: "Cuci & isi freon 2 unit AC", amount: 1750000, type: "out" },
-      { date: "2026-09-12", houseId: 5, unit: "Kontrakan 05", category: "Maintenance Tidak Rutin", subItem: "Perbaikan Keran / Pipa", note: "Ganti pompa air & pipa bocor", amount: 1950000, type: "out" },
-      { date: "2026-08-20", houseId: 2, unit: "Kontrakan 02", category: "Maintenance Rutin", subItem: "Kuras Toren Air", note: "Bersih toren & ganti pelampung", amount: 1700000, type: "out" },
-      { date: "2026-07-20", houseId: 2, unit: "Kontrakan 02", category: "Angsuran", subItem: "Angsuran Ke-2", note: "Pembayaran termin 2", amount: 40000000, type: "in" },
-      { date: "2026-06-10", houseId: 5, unit: "Kontrakan 05", category: "DP", subItem: "DP Awal 50%", note: "Masuk kontrak baru", amount: 62500000, type: "in" }
-    ];
+    const defaultHistory = [];
 
     let houses = JSON.parse(localStorage.getItem('om_v11_houses')) || JSON.parse(JSON.stringify(defaultHouses));
     let sharedExpenseTotal = localStorage.getItem('om_v11_shared_exp') !== null
@@ -1868,7 +1799,7 @@
       return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
     }
 
-    // Hitung selisih hari ke tanggal rutin bulanan berikutnya (misal tiap tgl 5)
+    // Hitung selisih hari & kode siklus bulan ("YYYY-MM") untuk jadwal rutin bulanan
     function getNextMonthlyOccurrenceInfo(dayOfMonth) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -1879,7 +1810,6 @@
       let candidate = new Date(y, m, Math.min(dayOfMonth, maxDayThisMonth));
       candidate.setHours(0, 0, 0, 0);
 
-      // Jika tanggal bulan ini sudah lewat lebih dari 2 hari, arahkan ke bulan depan
       const diffThisMonth = Math.ceil((candidate - today) / (1000 * 60 * 60 * 24));
       if (diffThisMonth < -2) {
         const maxDayNextMonth = new Date(y, m + 2, 0).getDate();
@@ -1889,7 +1819,8 @@
 
       const diffDays = Math.ceil((candidate - today) / (1000 * 60 * 60 * 24));
       const dateStr = candidate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-      return { diffDays, dateStr };
+      const cycleKey = `${candidate.getFullYear()}-${String(candidate.getMonth() + 1).padStart(2, '0')}`;
+      return { diffDays, dateStr, cycleKey };
     }
 
     function addMonthsToDateStr(dateStr, monthsToAdd) {
@@ -2017,8 +1948,17 @@
       document.getElementById('totalPemasukanSub').innerHTML = `Masuk: <strong>${formatRupiah(totalIn)}</strong> • Keluar Unit: <strong>${formatRupiah(totalUnitExpenses)}</strong> • Bersama: <strong>${formatRupiah(sharedExpenseTotal)}</strong>`;
       document.getElementById('totalJaminanDisplay').textContent = formatRupiah(totalDeposit);
 
-      document.getElementById('borosHouseDisplay').textContent = `${mostExpensive.name} (${formatRupiah(mostExpensive.expenseAmount)})`;
-      document.getElementById('hematHouseDisplay').textContent = `Performa terbaik: ${bestPerformer.name} (Net: ${formatRupiah(bestPerformer.paidAmount - bestPerformer.expenseAmount)})`;
+      if (mostExpensive.expenseAmount > 0) {
+        document.getElementById('borosHouseDisplay').textContent = `${mostExpensive.name} (${formatRupiah(mostExpensive.expenseAmount)})`;
+      } else {
+        document.getElementById('borosHouseDisplay').textContent = `-`;
+      }
+
+      if (bestPerformer.paidAmount > 0 || bestPerformer.expenseAmount > 0) {
+        document.getElementById('hematHouseDisplay').textContent = `Performa terbaik: ${bestPerformer.name} (Net: ${formatRupiah(bestPerformer.paidAmount - bestPerformer.expenseAmount)})`;
+      } else {
+        document.getElementById('hematHouseDisplay').textContent = `Performa terbaik: -`;
+      }
 
       renderAlarms();
       renderHouses();
@@ -2026,11 +1966,12 @@
       renderHistory();
     }
 
-    // ==================== ALARM & PENGINGAT OTOMATIS (KONTRAK + CUSTOM RUTIN) ====================
+    // ==================== ALARM & PENGINGAT OTOMATIS ====================
     function renderAlarms() {
       const alarmList = document.getElementById('alarmList');
       alarmList.innerHTML = '';
       let alerts = [];
+      let pendingCount = 0;
 
       // 1. Cek jatuh tempo angsuran & berakhirnya kontrak tiap unit
       houses.forEach(h => {
@@ -2040,11 +1981,13 @@
         const daysToDue = getDaysDiff(h.nextDueDate);
 
         if (info.sisaTarget > 0 && daysToDue !== null && daysToDue <= 7) {
+          pendingCount++;
           const waktuText = daysToDue < 0
             ? `Telat ${Math.abs(daysToDue)} hari (${formatDateIndo(h.nextDueDate)})`
             : (daysToDue === 0 ? `Hari Ini (${formatDateIndo(h.nextDueDate)})` : `${daysToDue} hari lagi (${formatDateIndo(h.nextDueDate)})`);
 
           alerts.push({
+            type: 'unit',
             title: `⚠️ ${h.name} (${h.tenant}) — Jatuh Tempo ${waktuText}`,
             desc: `Tagihan Angsuran ke-${info.nextTermNumber} (dari ${info.totalCount}x) sebesar ${formatRupiah(info.currentDueNominal)} dari total sisa ${formatRupiah(info.sisaTarget)}`,
             highlight: `Masih sisa ${info.remainingTermsCount}x pembayaran lagi • Interval: per ${info.intervalMonths} bulan`,
@@ -2055,7 +1998,9 @@
 
         const daysToEnd = getDaysDiff(h.endDate);
         if (daysToEnd !== null && daysToEnd <= 7 && daysToEnd >= -30) {
+          pendingCount++;
           alerts.push({
+            type: 'unit',
             title: `⚠️ ${h.name} (${h.tenant}) — Masa Kontrak Selesai dalam ${daysToEnd < 0 ? 'Lewat ' + Math.abs(daysToEnd) : daysToEnd} hari`,
             desc: `Berakhir pada ${formatDateIndo(h.endDate)} • Uang jaminan tercatat: ${formatRupiah(h.depositAmount)}`,
             highlight: `Segera konfirmasi perpanjangan atau pengecekan kondisi rumah`,
@@ -2065,24 +2010,36 @@
         }
       });
 
-      // 2. Cek semua Pengingat Rutin Custom (WiFi, Tukang Kebun, Sampah, dll.)
+      // 2. Cek Pengingat Rutin Custom (Bisa di-Done & otomatis reset bulan depan)
       customAlarms.forEach(ca => {
         const occ = getNextMonthlyOccurrenceInfo(ca.dayOfMonth);
+        const isDoneThisCycle = Array.isArray(ca.paidCycles) && ca.paidCycles.includes(occ.cycleKey);
+
         if (occ.diffDays <= ca.leadDays) {
+          if (!isDoneThisCycle) pendingCount++;
+
           const waktuLabel = occ.diffDays < 0
-            ? `Lewat ${Math.abs(occ.diffDays)} hari (Tgl ${ca.dayOfMonth})`
+            ? `Lewat ${Math.abs(occ.diffDays)} hari (${occ.dateStr})`
             : (occ.diffDays === 0 ? `Hari Ini (${occ.dateStr})` : `${occ.diffDays} hari lagi (${occ.dateStr})`);
 
           alerts.push({
-            title: `🔔 Pengingat Rutin: ${ca.title} — ${waktuLabel}`,
-            desc: ca.note ? ca.note : `Jadwal rutin setiap tanggal ${ca.dayOfMonth} (Pengingat aktif H-${ca.leadDays})`,
-            highlight: `Jadwal bulanan tiap tanggal ${ca.dayOfMonth}`,
+            type: 'custom',
+            alarmId: ca.id,
+            cycleKey: occ.cycleKey,
+            isDone: isDoneThisCycle,
+            title: isDoneThisCycle
+              ? `✅ [DONE] ${ca.title} — Sudah Dibayar (${occ.dateStr})`
+              : `🔔 Pengingat Rutin: ${ca.title} — ${waktuLabel}`,
+            desc: ca.note ? ca.note : `Jadwal rutin setiap tanggal ${ca.dayOfMonth}`,
+            highlight: isDoneThisCycle
+              ? `Lunas bulan ini • Otomatis reset & muncul lagi bulan depan (tgl ${ca.dayOfMonth})`
+              : `Jadwal bulanan tiap tgl ${ca.dayOfMonth} • Klik "Done & Bayar" untuk potong kas otomatis`,
             phone: null
           });
         }
       });
 
-      document.getElementById('alarmCount').textContent = alerts.length;
+      document.getElementById('alarmCount').textContent = pendingCount;
 
       if (alerts.length === 0) {
         alarmList.innerHTML = `<li class="alarm-item" style="grid-template-columns:1fr;"><div class="alarm-item-desc">✅ Belum ada tagihan jatuh tempo atau jadwal rutin dalam waktu dekat. Klik <strong>"+ Atur Pengingat Rutin"</strong> untuk menambah jadwal baru.</div></li>`;
@@ -2092,16 +2049,74 @@
       alerts.forEach(a => {
         const li = document.createElement('li');
         li.className = 'alarm-item';
+        if (a.isDone) {
+          li.style.opacity = '0.78';
+          li.style.borderColor = 'var(--primary-green)';
+        }
+
+        let actionBtnHtml = '<div></div>';
+        if (a.type === 'unit' && a.phone) {
+          actionBtnHtml = `<a href="https://wa.me/${a.phone}?text=${encodeURIComponent(a.msg)}" target="_blank" class="btn btn-sm btn-wa" style="text-decoration:none;">Kirim WA 💬</a>`;
+        } else if (a.type === 'custom') {
+          if (a.isDone) {
+            actionBtnHtml = `<span class="status-pill pill-lunas">✓ Selesai Bulan Ini</span>`;
+          } else {
+            actionBtnHtml = `<button type="button" class="btn btn-sm btn-primary" onclick="doneCustomAlarm(${a.alarmId}, '${a.cycleKey}')">✅ Done & Bayar</button>`;
+          }
+        }
+
         li.innerHTML = `
           <div class="alarm-item-content">
             <div class="alarm-item-title">${a.title}</div>
             <div class="alarm-item-desc">${a.desc}</div>
-            ${a.highlight ? `<div class="alarm-item-highlight">${a.highlight}</div>` : ''}
+            ${a.highlight ? `<div class="alarm-item-highlight" style="${a.isDone ? 'color:var(--primary-green);' : ''}">${a.highlight}</div>` : ''}
           </div>
-          ${a.phone ? `<a href="https://wa.me/${a.phone}?text=${encodeURIComponent(a.msg)}" target="_blank" class="btn btn-sm btn-wa" style="text-decoration:none;">Kirim WA 💬</a>` : '<div></div>'}
+          ${actionBtnHtml}
         `;
         alarmList.appendChild(li);
       });
+    }
+
+    // Fungsi saat tombol "✅ Done & Bayar" ditekan pada Alarm Rutin
+    function doneCustomAlarm(alarmId, cycleKey) {
+      const ca = customAlarms.find(x => x.id === alarmId);
+      if (!ca) return;
+
+      const defaultNom = ca.nominal && ca.nominal > 0 ? String(ca.nominal) : '';
+      const inputStr = prompt(
+        `Konfirmasi pembayaran rutin "${ca.title}".\nMasukkan nominal yang dibayarkan (angka saja tanpa titik, isi 0 jika hanya tandai selesai):`,
+        defaultNom
+      );
+
+      if (inputStr === null) return;
+
+      const amount = parseInt(inputStr.replace(/[^0-9]/g, ''), 10) || 0;
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      if (!Array.isArray(ca.paidCycles)) ca.paidCycles = [];
+      if (!ca.paidCycles.includes(cycleKey)) {
+        ca.paidCycles.push(cycleKey);
+      }
+
+      let newExp = null;
+      if (amount > 0) {
+        sharedExpenseTotal += amount;
+        newExp = {
+          date: todayStr,
+          houseId: "ALL",
+          unit: "Kas Owner (Bersama)",
+          category: "Pengeluaran Rutin",
+          subItem: ca.title,
+          note: `Pembayaran rutin jadwal tgl ${ca.dayOfMonth} (Done dari Alarm)`,
+          amount: amount,
+          type: 'out'
+        };
+        history.unshift(newExp);
+      }
+
+      saveData();
+      syncToGoogleSheets(newExp);
+      renderApp();
     }
 
     // Modal Kelola Pengingat Rutin Custom
@@ -2133,7 +2148,7 @@
         li.innerHTML = `
           <div class="custom-alarm-info">
             <strong>${ca.title}</strong>
-            <span>Tiap tgl ${ca.dayOfMonth} • Muncul H-${ca.leadDays} (Berikutnya: ${occ.dateStr})${ca.note ? ' • ' + ca.note : ''}</span>
+            <span>Tiap tgl <strong>${ca.dayOfMonth}</strong> • Muncul <strong>H-${ca.leadDays}</strong> (Berikutnya: ${occ.dateStr})${ca.note ? ' • ' + ca.note : ''}</span>
           </div>
           <button type="button" class="btn btn-sm btn-danger-soft" onclick="deleteCustomAlarm(${ca.id})">Hapus</button>
         `;
@@ -2146,7 +2161,8 @@
       const title = document.getElementById('caTitle').value.trim();
       const day = Math.min(31, Math.max(1, parseInt(document.getElementById('caDay').value, 10) || 1));
       const leadDays = Math.max(1, parseInt(document.getElementById('caLeadDays').value, 10) || 7);
-      const nominal = parseInt(document.getElementById('caNominalReal').value, 10) || 0;
+      const nominalEl = document.getElementById('caNominalReal');
+      const nominal = nominalEl ? (parseInt(nominalEl.value, 10) || 0) : 0;
       const rawNote = document.getElementById('caNote').value.trim();
 
       if (!title) return;
@@ -2161,7 +2177,9 @@
         title: title,
         dayOfMonth: day,
         leadDays: leadDays,
-        note: combinedNote
+        nominal: nominal,
+        note: combinedNote,
+        paidCycles: []
       });
 
       saveData();
@@ -2170,8 +2188,8 @@
       renderAlarms();
 
       document.getElementById('caTitle').value = '';
-      document.getElementById('caNominalVis').value = '';
-      document.getElementById('caNominalReal').value = '0';
+      if (document.getElementById('caNominalVis')) document.getElementById('caNominalVis').value = '';
+      if (nominalEl) nominalEl.value = '0';
       document.getElementById('caNote').value = '';
     }
 
@@ -2238,7 +2256,7 @@
         }));
 
         let expenseBreakdownHtml = '';
-        if (unitExpenses.length > 0) {
+        if (unitExpenses.length > 0 && !isVacant) {
           const shownItems = unitExpenses.slice(0, 4).map(ex => `
             <li class="exp-row">
               <span class="exp-date-col">${formatDateIndo(ex.date)}</span>
@@ -3107,21 +3125,100 @@
       closeModal('editHouseModal');
     }
 
-    function resetDemoData() {
-      if (confirm("Kembalikan seluruh data ke contoh awal?")) {
-        localStorage.removeItem('om_v11_houses');
-        localStorage.removeItem('om_v11_shared_exp');
-        localStorage.removeItem('om_v11_history');
-        localStorage.removeItem('om_v11_subcats');
-        localStorage.removeItem('om_v11_custom_alarms');
-        houses = JSON.parse(JSON.stringify(defaultHouses));
-        sharedExpenseTotal = defaultSharedExpense;
-        history = JSON.parse(JSON.stringify(defaultHistory));
-        subCategories = JSON.parse(JSON.stringify(defaultSubCategories));
-        customAlarms = JSON.parse(JSON.stringify(defaultCustomAlarms));
-        saveData();
-        renderApp();
+    // ==================== RESET TOTAL TAHAN 3 DETIK ====================
+    let holdResetTimer = null;
+
+    function startHoldReset(e) {
+      if (e && e.cancelable) e.preventDefault();
+      const btn = document.getElementById('btnResetHold');
+      const lbl = document.getElementById('holdResetText');
+      if (!btn || holdResetTimer) return;
+
+      btn.classList.add('holding');
+      lbl.textContent = "⏳ Terus tahan 3 detik untuk menghapus...";
+
+      holdResetTimer = setTimeout(() => {
+        cancelHoldReset();
+        executeResetAllToZero();
+      }, 3000);
+    }
+
+    function cancelHoldReset() {
+      if (holdResetTimer) {
+        clearTimeout(holdResetTimer);
+        holdResetTimer = null;
       }
+      const btn = document.getElementById('btnResetHold');
+      const lbl = document.getElementById('holdResetText');
+      if (btn) btn.classList.remove('holding');
+      if (lbl) lbl.textContent = "🗑️ Tahan 3 Detik: Reset ke 0";
+    }
+
+    function executeResetAllToZero() {
+      localStorage.removeItem('om_v11_houses');
+      localStorage.removeItem('om_v11_shared_exp');
+      localStorage.removeItem('om_v11_history');
+      localStorage.removeItem('om_v11_custom_alarms');
+
+      houses = JSON.parse(JSON.stringify(defaultHouses));
+      sharedExpenseTotal = 0;
+      history = [];
+      customAlarms = [];
+
+      saveData();
+      syncToGoogleSheets(null);
+      renderApp();
+      alert("✅ Seluruh data berhasil dikosongkan ke Rp 0!");
+    }
+
+    // ==================== SELESAI KONTRAK / KOSONGKAN PER UNIT ====================
+    function vacateSingleUnit() {
+      const id = parseInt(document.getElementById('editHouseId').value, 10);
+      const h = houses.find(x => x.id === id);
+      if (!h) return;
+
+      const namaPenyewa = h.tenant || "unit ini";
+      const konfirmasi = confirm(
+        `Kosongkan ${h.name} (${namaPenyewa})?\n\n` +
+        `• Status unit akan kembali menjadi KOSONG & siap menerima penyewa baru.\n` +
+        `• Seluruh riwayat pemasukan & pengeluaran penyewa lama TETAP AMAN tersimpan di Mutasi Keuangan & Google Sheets.`
+      );
+      if (!konfirmasi) return;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      const noteArsip = h.tenant
+        ? `Kontrak selesai & unit dikosongkan (Eks penyewa: ${h.tenant}, total masuk ${formatRupiah(h.paidAmount)})`
+        : `Unit direset ke status kosong`;
+
+      const logTr = {
+        date: todayStr,
+        houseId: h.id,
+        unit: h.name,
+        category: "Arsip Kontrak",
+        subItem: "Penyewa Pindah / Selesai",
+        note: noteArsip,
+        amount: 0,
+        type: 'in'
+      };
+      history.unshift(logTr);
+
+      h.tenant = "";
+      h.phone = "";
+      h.email = "";
+      h.dpAmount = 0;
+      h.paidAmount = 0;
+      h.depositAmount = 0;
+      h.expenseAmount = 0;
+      h.startDate = "";
+      h.endDate = "";
+      h.nextDueDate = "";
+      h.lastPaidDate = "";
+
+      saveData();
+      syncToGoogleSheets(logTr);
+      renderApp();
+      closeModal('editHouseModal');
+      alert(`✅ ${h.name} berhasil dikosongkan dan siap menerima penyewa baru!`);
     }
 
     // Backup & Restore Data
