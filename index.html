@@ -272,6 +272,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .alarm-header h3 {
@@ -281,6 +283,12 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .alarm-header-btns {
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
 
     .alarm-list {
@@ -366,7 +374,7 @@
       gap: 6px;
     }
 
-    /* 6 Kontrakan Grid (Sejajar Presisi) */
+    /* 6 Kontrakan Grid */
     .houses-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -619,7 +627,7 @@
     .btn-wa { background: #25D366; color: white; }
     .btn-wa:hover { background: #1EBE5D; }
 
-    /* Mutasi & Filter Lengkap (Rapi & Anti-Nabrak) */
+    /* Mutasi & Filter Lengkap */
     .history-card {
       background: var(--card-white);
       border-radius: var(--radius-lg);
@@ -775,6 +783,37 @@
     .sub-adjust-row input {
       height: 36px;
       font-size: 0.82rem;
+    }
+
+    /* Custom Alarm Manager List */
+    .custom-alarm-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .custom-alarm-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: var(--mini-box-bg);
+      border: 1px solid var(--border-soft);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+    }
+
+    .custom-alarm-info strong {
+      display: block;
+      font-size: 0.86rem;
+      color: var(--text-dark);
+    }
+
+    .custom-alarm-info span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
     }
 
     /* Evaluasi Detail Card List */
@@ -1086,11 +1125,14 @@
         </div>
       </div>
 
-      <!-- Panel Alarm Penagihan & WiFi di Beranda Atas -->
+      <!-- Panel Alarm Penagihan & Pengingat Rutin Custom -->
       <div class="alarm-panel active" id="alarmPanel">
         <div class="alarm-header">
-          <h3>⏰ Pengingat Otomatis (H-7 Kontrak, Angsuran & WiFi)</h3>
-          <button class="btn btn-sm btn-outline" onclick="toggleAlarmPanel()">Sembunyikan</button>
+          <h3>⏰ Pengingat Otomatis (Kontrak, Angsuran & Jadwal Rutin)</h3>
+          <div class="alarm-header-btns">
+            <button class="btn btn-sm btn-orange" onclick="openCustomAlarmModal()">+ Atur Pengingat Rutin</button>
+            <button class="btn btn-sm btn-outline" onclick="toggleAlarmPanel()">Sembunyikan</button>
+          </div>
         </div>
         <ul class="alarm-list" id="alarmList"></ul>
       </div>
@@ -1188,6 +1230,54 @@
       <span>Mutasi Keuangan</span>
     </button>
   </nav>
+
+  <!-- ==================== MODAL KELOLA PENGINGAT RUTIN CUSTOM ==================== -->
+  <div class="modal-overlay" id="customAlarmModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>⏰ Atur Jadwal Pengingat Rutin Bulanan</h3>
+        <button class="close-modal" onclick="closeModal('customAlarmModal')">✕</button>
+      </div>
+
+      <form onsubmit="addCustomAlarm(event)">
+        <div class="form-group">
+          <label>Nama Pengingat / Tagihan Rutin</label>
+          <input type="text" id="caTitle" placeholder="Misal: Bayar Tukang Kebun / WiFi / Sampah" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Jatuh Tempo Tiap Tanggal</label>
+            <input type="number" id="caDay" min="1" max="31" value="5" required>
+          </div>
+          <div class="form-group">
+            <label>Munculkan Alarm Mulai</label>
+            <div class="select-wrap">
+              <select id="caLeadDays">
+                <option value="7" selected>H-7 (Seminggu Sebelumnya)</option>
+                <option value="5">H-5 (5 Hari Sebelumnya)</option>
+                <option value="3">H-3 (3 Hari Sebelumnya)</option>
+                <option value="1">H-1 (Sehari Sebelumnya)</option>
+                <option value="14">H-14 (2 Minggu Sebelumnya)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Catatan / Nominal Estimasi (Opsional)</label>
+          <input type="text" id="caNote" placeholder="Misal: Rp 300.000 untuk bersih area depan">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">+ Tambah ke Jadwal Pengingat</button>
+      </form>
+
+      <div style="margin-top: 20px; border-top: 1.5px dashed var(--border-soft); padding-top: 14px;">
+        <div style="font-size: 0.84rem; font-weight: 800; margin-bottom: 6px;">Daftar Pengingat Rutin Aktif:</div>
+        <ul class="custom-alarm-list" id="customAlarmManageList"></ul>
+      </div>
+    </div>
+  </div>
 
   <!-- ==================== MODAL EVALUASI RINCIAN SEMUA KONTRAKAN ==================== -->
   <div class="modal-overlay" id="evalModal">
@@ -1518,11 +1608,33 @@
   </div>
 
   <script>
+    // Tempel URL Web App Google Apps Script kamu di sini agar auto-sync ke Google Sheets:
+    const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzs5SC3GCKo3OMRF3BiJb0RwlaUauiDVsiCkKGWXerUIEAIOiyZndRmV1zqApAvxFhZ/exec";
+
+    function syncToGoogleSheets(transactionObj = null) {
+      if (!GOOGLE_SHEET_WEBHOOK_URL || GOOGLE_SHEET_WEBHOOK_URL.includes("TEMPEL_URL")) return;
+      fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          transaction: transactionObj,
+          houses: houses
+        })
+      }).catch(err => console.warn("Sync Sheets gagal:", err));
+    }
+
     const defaultSubCategories = {
-      "Pengeluaran Rutin": ["WiFi Bersama Komplek", "Tukang Sampah Komplek", "Keamanan / Ronda", "Listrik", "Air / PAM", "Pajak PBB"],
+      "Pengeluaran Rutin": ["WiFi Bersama Komplek", "Tukang Sampah Komplek", "Tukang Kebun", "Keamanan / Ronda", "Listrik", "Air / PAM", "Pajak PBB"],
       "Maintenance Rutin": ["Servis AC", "Kuras Toren Air", "Bersih Taman & Selokan"],
       "Maintenance Tidak Rutin": ["Tukang (Atap Bocor)", "Perbaikan Keran / Pipa", "Cat Ulang Dinding", "Perbaikan Kunci / Pintu"]
     };
+
+    // Pengingat Rutin Bulanan Custom (Bisa ditambah & dihapus dari tombol + Atur Pengingat Rutin)
+    const defaultCustomAlarms = [
+      { id: 101, title: "Tagihan WiFi Bersama Komplek", dayOfMonth: 20, leadDays: 7, note: "Internet 1 komplek (6 kontrakan)" },
+      { id: 102, title: "Bayar Tukang Kebun & Kebersihan", dayOfMonth: 5, leadDays: 7, note: "Perawatan rumput & area depan rutin" }
+    ];
 
     const defaultHouses = [
       {
@@ -1654,37 +1766,23 @@
       { date: "2026-06-10", houseId: 5, unit: "Kontrakan 05", category: "DP", subItem: "DP Awal 50%", note: "Masuk kontrak baru", amount: 62500000, type: "in" }
     ];
 
-    let houses = JSON.parse(localStorage.getItem('om_v10_houses')) || JSON.parse(JSON.stringify(defaultHouses));
-    let sharedExpenseTotal = localStorage.getItem('om_v10_shared_exp') !== null
-      ? parseInt(localStorage.getItem('om_v10_shared_exp'), 10)
+    let houses = JSON.parse(localStorage.getItem('om_v11_houses')) || JSON.parse(JSON.stringify(defaultHouses));
+    let sharedExpenseTotal = localStorage.getItem('om_v11_shared_exp') !== null
+      ? parseInt(localStorage.getItem('om_v11_shared_exp'), 10)
       : defaultSharedExpense;
-    let history = JSON.parse(localStorage.getItem('om_v10_history')) || JSON.parse(JSON.stringify(defaultHistory));
-    let subCategories = JSON.parse(localStorage.getItem('om_v10_subcats')) || JSON.parse(JSON.stringify(defaultSubCategories));
-    let currentTheme = localStorage.getItem('om_v10_theme') || 'light';
-    let securityPin = localStorage.getItem('om_v10_pin') || '1234';
+    let history = JSON.parse(localStorage.getItem('om_v11_history')) || JSON.parse(JSON.stringify(defaultHistory));
+    let subCategories = JSON.parse(localStorage.getItem('om_v11_subcats')) || JSON.parse(JSON.stringify(defaultSubCategories));
+    let customAlarms = JSON.parse(localStorage.getItem('om_v11_custom_alarms')) || JSON.parse(JSON.stringify(defaultCustomAlarms));
+    let currentTheme = localStorage.getItem('om_v11_theme') || 'light';
+    let securityPin = localStorage.getItem('om_v11_pin') || '1234';
     let pendingPinTab = 'koreksi';
 
-    // URL Web App Google Apps Script
-    const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzs5SC3GCKo3OMRF3BiJb0RwlaUauiDVsiCkKGWXerUIEAIOiyZndRmV1zqApAvxFhZ/exec";
-
-    function syncToGoogleSheets(transactionObj = null) {
-      if (!GOOGLE_SHEET_WEBHOOK_URL || GOOGLE_SHEET_WEBHOOK_URL.includes("TEMPEL_URL")) return;
-      fetch(GOOGLE_SHEET_WEBHOOK_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({
-          transaction: transactionObj,
-          houses: houses
-        })
-      }).catch(err => console.warn("Sync Sheets gagal:", err));
-    }
-
     function saveData() {
-      localStorage.setItem('om_v10_houses', JSON.stringify(houses));
-      localStorage.setItem('om_v10_shared_exp', String(sharedExpenseTotal));
-      localStorage.setItem('om_v10_history', JSON.stringify(history));
-      localStorage.setItem('om_v10_subcats', JSON.stringify(subCategories));
+      localStorage.setItem('om_v11_houses', JSON.stringify(houses));
+      localStorage.setItem('om_v11_shared_exp', String(sharedExpenseTotal));
+      localStorage.setItem('om_v11_history', JSON.stringify(history));
+      localStorage.setItem('om_v11_subcats', JSON.stringify(subCategories));
+      localStorage.setItem('om_v11_custom_alarms', JSON.stringify(customAlarms));
     }
 
     // Formatters & Date Helpers
@@ -1719,6 +1817,30 @@
       return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
     }
 
+    // Hitung selisih hari ke tanggal rutin bulanan berikutnya (misal tiap tgl 5)
+    function getNextMonthlyOccurrenceInfo(dayOfMonth) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const y = today.getFullYear();
+      const m = today.getMonth();
+
+      const maxDayThisMonth = new Date(y, m + 1, 0).getDate();
+      let candidate = new Date(y, m, Math.min(dayOfMonth, maxDayThisMonth));
+      candidate.setHours(0, 0, 0, 0);
+
+      // Jika tanggal bulan ini sudah lewat lebih dari 2 hari, arahkan ke bulan depan
+      const diffThisMonth = Math.ceil((candidate - today) / (1000 * 60 * 60 * 24));
+      if (diffThisMonth < -2) {
+        const maxDayNextMonth = new Date(y, m + 2, 0).getDate();
+        candidate = new Date(y, m + 1, Math.min(dayOfMonth, maxDayNextMonth));
+        candidate.setHours(0, 0, 0, 0);
+      }
+
+      const diffDays = Math.ceil((candidate - today) / (1000 * 60 * 60 * 24));
+      const dateStr = candidate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      return { diffDays, dateStr };
+    }
+
     function addMonthsToDateStr(dateStr, monthsToAdd) {
       if (!dateStr) return '';
       const parts = dateStr.split('-').map(Number);
@@ -1739,13 +1861,11 @@
       return `${targetYear}-${mm}-${dd}`;
     }
 
-    // Jarak antar bayar = 12 bulan dibagi jumlah bayar (kali)
     function getSchemeIntervalMonths(schemeName, installmentCount) {
       const cnt = Math.max(1, parseInt(installmentCount, 10) || 1);
       return Math.max(1, Math.round(12 / cnt));
     }
 
-    // Hitung detail termin berdasarkan (Target - DP) dibagi Jumlah Bayar
     function getInstallmentInfo(h) {
       const totalCount = Math.max(1, parseInt(h.installmentCount, 10) || 1);
       const dpVal = Math.max(0, parseInt(h.dpAmount, 10) || 0);
@@ -1803,7 +1923,7 @@
 
     function toggleTheme() {
       currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-      localStorage.setItem('om_v10_theme', currentTheme);
+      localStorage.setItem('om_v11_theme', currentTheme);
       applyTheme();
     }
 
@@ -1855,12 +1975,13 @@
       renderHistory();
     }
 
-    // ==================== ALARM & PENGINGAT OTOMATIS ====================
+    // ==================== ALARM & PENGINGAT OTOMATIS (KONTRAK + CUSTOM RUTIN) ====================
     function renderAlarms() {
       const alarmList = document.getElementById('alarmList');
       alarmList.innerHTML = '';
       let alerts = [];
 
+      // 1. Cek jatuh tempo angsuran & berakhirnya kontrak tiap unit
       houses.forEach(h => {
         if (!h.tenant) return;
 
@@ -1870,7 +1991,7 @@
         if (info.sisaTarget > 0 && daysToDue !== null && daysToDue <= 7) {
           const waktuText = daysToDue < 0
             ? `Telat ${Math.abs(daysToDue)} hari (${formatDateIndo(h.nextDueDate)})`
-            : `${daysToDue} hari lagi (${formatDateIndo(h.nextDueDate)})`;
+            : (daysToDue === 0 ? `Hari Ini (${formatDateIndo(h.nextDueDate)})` : `${daysToDue} hari lagi (${formatDateIndo(h.nextDueDate)})`);
 
           alerts.push({
             title: `⚠️ ${h.name} (${h.tenant}) — Jatuh Tempo ${waktuText}`,
@@ -1893,14 +2014,29 @@
         }
       });
 
-      alerts.push({
-        title: `⚠️ Pengingat Rutin Pengeluaran Bersama (WiFi & Sampah Komplek)`,
-        desc: `Pastikan tagihan bersama komplek (WiFi, tukang sampah, dll.) dari Kas Owner sudah dibayar bulan ini.`,
-        highlight: null,
-        phone: null
+      // 2. Cek semua Pengingat Rutin Custom (WiFi, Tukang Kebun, Sampah, dll.)
+      customAlarms.forEach(ca => {
+        const occ = getNextMonthlyOccurrenceInfo(ca.dayOfMonth);
+        if (occ.diffDays <= ca.leadDays) {
+          const waktuLabel = occ.diffDays < 0
+            ? `Lewat ${Math.abs(occ.diffDays)} hari (Tgl ${ca.dayOfMonth})`
+            : (occ.diffDays === 0 ? `Hari Ini (${occ.dateStr})` : `${occ.diffDays} hari lagi (${occ.dateStr})`);
+
+          alerts.push({
+            title: `🔔 Pengingat Rutin: ${ca.title} — ${waktuLabel}`,
+            desc: ca.note ? ca.note : `Jadwal rutin setiap tanggal ${ca.dayOfMonth} (Pengingat aktif H-${ca.leadDays})`,
+            highlight: `Jadwal bulanan tiap tanggal ${ca.dayOfMonth}`,
+            phone: null
+          });
+        }
       });
 
       document.getElementById('alarmCount').textContent = alerts.length;
+
+      if (alerts.length === 0) {
+        alarmList.innerHTML = `<li class="alarm-item" style="grid-template-columns:1fr;"><div class="alarm-item-desc">✅ Belum ada tagihan jatuh tempo atau jadwal rutin dalam waktu dekat. Klik <strong>"+ Atur Pengingat Rutin"</strong> untuk menambah jadwal baru.</div></li>`;
+        return;
+      }
 
       alerts.forEach(a => {
         const li = document.createElement('li');
@@ -1915,6 +2051,72 @@
         `;
         alarmList.appendChild(li);
       });
+    }
+
+    // Modal Kelola Pengingat Rutin Custom
+    function openCustomAlarmModal() {
+      document.getElementById('caTitle').value = '';
+      document.getElementById('caDay').value = '5';
+      document.getElementById('caLeadDays').value = '7';
+      document.getElementById('caNote').value = '';
+      renderCustomAlarmManageList();
+      document.getElementById('customAlarmModal').classList.add('open');
+    }
+
+    function renderCustomAlarmManageList() {
+      const listEl = document.getElementById('customAlarmManageList');
+      listEl.innerHTML = '';
+
+      if (customAlarms.length === 0) {
+        listEl.innerHTML = `<li style="font-size:0.8rem; color:var(--text-muted); font-style:italic;">Belum ada pengingat rutin tersimpan.</li>`;
+        return;
+      }
+
+      customAlarms.forEach(ca => {
+        const occ = getNextMonthlyOccurrenceInfo(ca.dayOfMonth);
+        const li = document.createElement('li');
+        li.className = 'custom-alarm-row';
+        li.innerHTML = `
+          <div class="custom-alarm-info">
+            <strong>${ca.title}</strong>
+            <span>Tiap tgl <strong>${ca.dayOfMonth}</strong> • Muncul <strong>H-${ca.leadDays}</strong> (Berikutnya: ${occ.dateStr})${ca.note ? ' • ' + ca.note : ''}</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-danger-soft" onclick="deleteCustomAlarm(${ca.id})">Hapus</button>
+        `;
+        listEl.appendChild(li);
+      });
+    }
+
+    function addCustomAlarm(e) {
+      e.preventDefault();
+      const title = document.getElementById('caTitle').value.trim();
+      const day = Math.min(31, Math.max(1, parseInt(document.getElementById('caDay').value, 10) || 1));
+      const leadDays = Math.max(1, parseInt(document.getElementById('caLeadDays').value, 10) || 7);
+      const note = document.getElementById('caNote').value.trim();
+
+      if (!title) return;
+
+      customAlarms.push({
+        id: Date.now(),
+        title: title,
+        dayOfMonth: day,
+        leadDays: leadDays,
+        note: note
+      });
+
+      saveData();
+      renderCustomAlarmManageList();
+      renderAlarms();
+
+      document.getElementById('caTitle').value = '';
+      document.getElementById('caNote').value = '';
+    }
+
+    function deleteCustomAlarm(id) {
+      customAlarms = customAlarms.filter(x => x.id !== id);
+      saveData();
+      renderCustomAlarmManageList();
+      renderAlarms();
     }
 
     // ==================== KARTU KONTRAKAN ====================
@@ -2307,7 +2509,7 @@
         sharedExpenseTotal = newShared;
 
         if (diffShared !== 0) {
-          history.unshift({
+          const corrTr = {
             date: todayStr,
             houseId: "ALL",
             unit: "Kas Owner (Bersama)",
@@ -2316,7 +2518,9 @@
             note: `${reason} (Menjadi ${formatRupiah(newShared)})`,
             amount: Math.abs(diffShared),
             type: diffShared > 0 ? 'out' : 'in'
-          });
+          };
+          history.unshift(corrTr);
+          syncToGoogleSheets(corrTr);
         }
 
         saveData();
@@ -2340,8 +2544,9 @@
       h.expenseAmount = newExp;
       h.depositAmount = newDep;
 
+      let lastCorrTr = null;
       if (diffPaid !== 0) {
-        history.unshift({
+        lastCorrTr = {
           date: todayStr,
           houseId: h.id,
           unit: h.name,
@@ -2350,10 +2555,11 @@
           note: `${reason} (Menjadi ${formatRupiah(newPaid)})`,
           amount: Math.abs(diffPaid),
           type: diffPaid > 0 ? 'in' : 'out'
-        });
+        };
+        history.unshift(lastCorrTr);
       }
       if (diffExp !== 0) {
-        history.unshift({
+        lastCorrTr = {
           date: todayStr,
           houseId: h.id,
           unit: h.name,
@@ -2362,10 +2568,11 @@
           note: `${reason} (Menjadi ${formatRupiah(newExp)})`,
           amount: Math.abs(diffExp),
           type: diffExp > 0 ? 'out' : 'in'
-        });
+        };
+        history.unshift(lastCorrTr);
       }
       if (diffPaid === 0 && diffExp === 0) {
-        history.unshift({
+        lastCorrTr = {
           date: todayStr,
           houseId: h.id,
           unit: h.name,
@@ -2374,10 +2581,12 @@
           note: `${reason} (Jaminan menjadi ${formatRupiah(newDep)})`,
           amount: newDep,
           type: 'in'
-        });
+        };
+        history.unshift(lastCorrTr);
       }
 
       saveData();
+      syncToGoogleSheets(lastCorrTr);
       renderApp();
       closeModal('pinModal');
       alert(`Koreksi angka untuk ${h.name} berhasil disimpan!`);
@@ -2392,7 +2601,7 @@
         return;
       }
       securityPin = p1;
-      localStorage.setItem('om_v10_pin', securityPin);
+      localStorage.setItem('om_v11_pin', securityPin);
       document.getElementById('newPinInput').value = '';
       document.getElementById('confirmPinInput').value = '';
       alert("PIN Keamanan berhasil diperbarui!");
@@ -2836,14 +3045,16 @@
 
     function resetDemoData() {
       if (confirm("Kembalikan seluruh data ke contoh awal?")) {
-        localStorage.removeItem('om_v10_houses');
-        localStorage.removeItem('om_v10_shared_exp');
-        localStorage.removeItem('om_v10_history');
-        localStorage.removeItem('om_v10_subcats');
+        localStorage.removeItem('om_v11_houses');
+        localStorage.removeItem('om_v11_shared_exp');
+        localStorage.removeItem('om_v11_history');
+        localStorage.removeItem('om_v11_subcats');
+        localStorage.removeItem('om_v11_custom_alarms');
         houses = JSON.parse(JSON.stringify(defaultHouses));
         sharedExpenseTotal = defaultSharedExpense;
         history = JSON.parse(JSON.stringify(defaultHistory));
         subCategories = JSON.parse(JSON.stringify(defaultSubCategories));
+        customAlarms = JSON.parse(JSON.stringify(defaultCustomAlarms));
         saveData();
         renderApp();
       }
@@ -2857,7 +3068,8 @@
         houses: houses,
         sharedExpenseTotal: sharedExpenseTotal,
         history: history,
-        subCategories: subCategories
+        subCategories: subCategories,
+        customAlarms: customAlarms
       };
       const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -2887,7 +3099,9 @@
           sharedExpenseTotal = data.sharedExpenseTotal || 0;
           history = data.history;
           if (data.subCategories) subCategories = data.subCategories;
+          if (data.customAlarms) customAlarms = data.customAlarms;
           saveData();
+          syncToGoogleSheets(null);
           renderApp();
           alert("Data kontrakan berhasil dipulihkan!");
         } catch (err) {
