@@ -1664,6 +1664,22 @@
     let securityPin = localStorage.getItem('om_v10_pin') || '1234';
     let pendingPinTab = 'koreksi';
 
+    // URL Web App Google Apps Script
+    const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzs5SC3GCKo3OMRF3BiJb0RwlaUauiDVsiCkKGWXerUIEAIOiyZndRmV1zqApAvxFhZ/exec";
+
+    function syncToGoogleSheets(transactionObj = null) {
+      if (!GOOGLE_SHEET_WEBHOOK_URL || GOOGLE_SHEET_WEBHOOK_URL.includes("TEMPEL_URL")) return;
+      fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          transaction: transactionObj,
+          houses: houses
+        })
+      }).catch(err => console.warn("Sync Sheets gagal:", err));
+    }
+
     function saveData() {
       localStorage.setItem('om_v10_houses', JSON.stringify(houses));
       localStorage.setItem('om_v10_shared_exp', String(sharedExpenseTotal));
@@ -2697,7 +2713,7 @@
         }
       }
 
-      history.unshift({
+      const newTr = {
         date: date,
         houseId: house.id,
         unit: house.name,
@@ -2706,9 +2722,11 @@
         note: note,
         amount: amount,
         type: 'in'
-      });
+      };
 
+      history.unshift(newTr);
       saveData();
+      syncToGoogleSheets(newTr);
       renderApp();
       closeModal('incomeModal');
     }
@@ -2724,10 +2742,10 @@
 
       if (amount <= 0) return alert("Nominal harus lebih dari 0.");
 
+      let newExp;
       if (mode === 'serempak') {
         sharedExpenseTotal += amount;
-
-        history.unshift({
+        newExp = {
           date: date,
           houseId: "ALL",
           unit: "Kas Owner (Bersama)",
@@ -2736,12 +2754,12 @@
           note: note,
           amount: amount,
           type: 'out'
-        });
+        };
       } else {
         const houseId = parseInt(document.getElementById('expHouseId').value, 10);
         const house = houses.find(h => h.id === houseId);
         house.expenseAmount += amount;
-        history.unshift({
+        newExp = {
           date: date,
           houseId: house.id,
           unit: house.name,
@@ -2750,10 +2768,12 @@
           note: note,
           amount: amount,
           type: 'out'
-        });
+        };
       }
 
+      history.unshift(newExp);
       saveData();
+      syncToGoogleSheets(newExp);
       renderApp();
       closeModal('expenseModal');
     }
@@ -2787,6 +2807,7 @@
       h.lastPaidDate = document.getElementById('editLastPaid').value;
       h.nextDueDate = document.getElementById('editNextDue').value;
 
+      let dpTr = null;
       if (dpBaru > 0 && h.paidAmount === 0) {
         h.paidAmount = dpBaru;
         const payDate = h.lastPaidDate || h.startDate || new Date().toISOString().split('T')[0];
@@ -2794,7 +2815,7 @@
         if (!h.nextDueDate && h.paidAmount < h.targetPrice) {
           h.nextDueDate = addMonthsToDateStr(payDate, intervalBln);
         }
-        history.unshift({
+        dpTr = {
           date: payDate,
           houseId: h.id,
           unit: h.name,
@@ -2803,10 +2824,12 @@
           note: `DP awal (Sisa ${formatRupiah(sisaSetelahDp)} dicicil ${h.installmentCount}x)`,
           amount: dpBaru,
           type: 'in'
-        });
+        };
+        history.unshift(dpTr);
       }
 
       saveData();
+      syncToGoogleSheets(dpTr);
       renderApp();
       closeModal('editHouseModal');
     }
