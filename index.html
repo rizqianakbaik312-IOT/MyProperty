@@ -1264,9 +1264,16 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Catatan / Nominal Estimasi (Opsional)</label>
-          <input type="text" id="caNote" placeholder="Misal: Rp 300.000 untuk bersih area depan">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nominal Estimasi (Rp) <span style="font-weight:500; color:var(--text-muted); font-size:0.73rem;">(Opsional)</span></label>
+            <input type="text" id="caNominalVis" inputmode="numeric" placeholder="Contoh: 300.000" oninput="formatInputDots(this, 'caNominalReal')">
+            <input type="hidden" id="caNominalReal" value="0">
+          </div>
+          <div class="form-group">
+            <label>Catatan Singkat <span style="font-weight:500; color:var(--text-muted); font-size:0.73rem;">(Opsional)</span></label>
+            <input type="text" id="caNote" placeholder="Misal: Area depan komplek">
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">+ Tambah ke Jadwal Pengingat</button>
@@ -1611,6 +1618,48 @@
     // Tempel URL Web App Google Apps Script kamu di sini agar auto-sync ke Google Sheets:
     const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzs5SC3GCKo3OMRF3BiJb0RwlaUauiDVsiCkKGWXerUIEAIOiyZndRmV1zqApAvxFhZ/exec";
 
+    function getActiveAlarmsForSync() {
+      const list = [];
+      houses.forEach(h => {
+        if (!h.tenant) return;
+        const info = getInstallmentInfo(h);
+        const daysToDue = getDaysDiff(h.nextDueDate);
+        if (info.sisaTarget > 0 && daysToDue !== null && daysToDue <= 7) {
+          const waktu = daysToDue < 0 ? `Telat ${Math.abs(daysToDue)} hari` : (daysToDue === 0 ? "Hari Ini" : `H-${daysToDue}`);
+          list.push({
+            category: "Angsuran",
+            title: `${h.name} (${h.tenant})`,
+            detail: `Angsuran ke-${info.nextTermNumber}/${info.totalCount} sebesar ${formatRupiah(info.currentDueNominal)} (Sisa total: ${formatRupiah(info.sisaTarget)})`,
+            statusTime: `${waktu} (${formatDateIndo(h.nextDueDate)})`
+          });
+        }
+        const daysToEnd = getDaysDiff(h.endDate);
+        if (daysToEnd !== null && daysToEnd <= 7 && daysToEnd >= -30) {
+          const waktu = daysToEnd < 0 ? `Lewat ${Math.abs(daysToEnd)} hari` : `H-${daysToEnd}`;
+          list.push({
+            category: "Akhir Kontrak",
+            title: `${h.name} (${h.tenant})`,
+            detail: `Kontrak selesai pada ${formatDateIndo(h.endDate)} • Deposit: ${formatRupiah(h.depositAmount)}`,
+            statusTime: waktu
+          });
+        }
+      });
+
+      customAlarms.forEach(ca => {
+        const occ = getNextMonthlyOccurrenceInfo(ca.dayOfMonth);
+        if (occ.diffDays <= ca.leadDays) {
+          const waktu = occ.diffDays < 0 ? `Lewat ${Math.abs(occ.diffDays)} hari` : (occ.diffDays === 0 ? "Hari Ini" : `H-${occ.diffDays}`);
+          list.push({
+            category: "Jadwal Rutin",
+            title: `${ca.title} (Tiap Tgl ${ca.dayOfMonth})`,
+            detail: ca.note || `Pengingat rutin bulanan`,
+            statusTime: `${waktu} (${occ.dateStr})`
+          });
+        }
+      });
+      return list;
+    }
+
     function syncToGoogleSheets(transactionObj = null) {
       if (!GOOGLE_SHEET_WEBHOOK_URL || GOOGLE_SHEET_WEBHOOK_URL.includes("TEMPEL_URL")) return;
       fetch(GOOGLE_SHEET_WEBHOOK_URL, {
@@ -1619,7 +1668,9 @@
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({
           transaction: transactionObj,
-          houses: houses
+          houses: houses,
+          sharedExpenseTotal: sharedExpenseTotal,
+          alarms: getActiveAlarmsForSync()
         })
       }).catch(err => console.warn("Sync Sheets gagal:", err));
     }
@@ -2058,33 +2109,11 @@
       document.getElementById('caTitle').value = '';
       document.getElementById('caDay').value = '5';
       document.getElementById('caLeadDays').value = '7';
+      document.getElementById('caNominalVis').value = '';
+      document.getElementById('caNominalReal').value = '0';
       document.getElementById('caNote').value = '';
       renderCustomAlarmManageList();
       document.getElementById('customAlarmModal').classList.add('open');
-    }
-
-    function renderCustomAlarmManageList() {
-      const listEl = document.getElementById('customAlarmManageList');
-      listEl.innerHTML = '';
-
-      if (customAlarms.length === 0) {
-        listEl.innerHTML = `<li style="font-size:0.8rem; color:var(--text-muted); font-style:italic;">Belum ada pengingat rutin tersimpan.</li>`;
-        return;
-      }
-
-      customAlarms.forEach(ca => {
-        const occ = getNextMonthlyOccurrenceInfo(ca.dayOfMonth);
-        const li = document.createElement('li');
-        li.className = 'custom-alarm-row';
-        li.innerHTML = `
-          <div class="custom-alarm-info">
-            <strong>${ca.title}</strong>
-            <span>Tiap tgl <strong>${ca.dayOfMonth}</strong> • Muncul <strong>H-${ca.leadDays}</strong> (Berikutnya: ${occ.dateStr})${ca.note ? ' • ' + ca.note : ''}</span>
-          </div>
-          <button type="button" class="btn btn-sm btn-danger-soft" onclick="deleteCustomAlarm(${ca.id})">Hapus</button>
-        `;
-        listEl.appendChild(li);
-      });
     }
 
     function addCustomAlarm(e) {
@@ -2092,16 +2121,23 @@
       const title = document.getElementById('caTitle').value.trim();
       const day = Math.min(31, Math.max(1, parseInt(document.getElementById('caDay').value, 10) || 1));
       const leadDays = Math.max(1, parseInt(document.getElementById('caLeadDays').value, 10) || 7);
-      const note = document.getElementById('caNote').value.trim();
+      const nominal = parseInt(document.getElementById('caNominalReal').value, 10) || 0;
+      const rawNote = document.getElementById('caNote').value.trim();
 
       if (!title) return;
+
+      // Gabungkan nominal terformat Rupiah + catatan jika diisi
+      let combinedNote = '';
+      if (nominal > 0 && rawNote) combinedNote = `Estimasi ${formatRupiah(nominal)} • ${rawNote}`;
+      else if (nominal > 0) combinedNote = `Estimasi ${formatRupiah(nominal)}`;
+      else combinedNote = rawNote;
 
       customAlarms.push({
         id: Date.now(),
         title: title,
         dayOfMonth: day,
         leadDays: leadDays,
-        note: note
+        note: combinedNote
       });
 
       saveData();
@@ -2109,6 +2145,8 @@
       renderAlarms();
 
       document.getElementById('caTitle').value = '';
+      document.getElementById('caNominalVis').value = '';
+      document.getElementById('caNominalReal').value = '0';
       document.getElementById('caNote').value = '';
     }
 
