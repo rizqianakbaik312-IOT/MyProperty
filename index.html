@@ -1614,10 +1614,17 @@
           </div>
         </div>
 
-        <div class="form-group" id="dpInputGroup">
-          <label>Nominal DP Awal (Rp) <span style="font-weight: 500; color: var(--text-muted); font-size: 0.74rem;">(Isi 0 jika tanpa DP)</span></label>
-          <input type="text" id="editDpDisplay" placeholder="Contoh: 10.000.000" oninput="formatInputDots(this, 'editDp'); autoCalcPerTerm();">
-          <input type="hidden" id="editDp" value="0">
+        <div class="form-row">
+          <div class="form-group" id="dpInputGroup">
+            <label>Nominal DP Awal (Rp) <span style="font-weight: 500; color: var(--text-muted); font-size: 0.72rem;">(0 jika tanpa DP)</span></label>
+            <input type="text" id="editDpDisplay" placeholder="Contoh: 10.000.000" oninput="formatInputDots(this, 'editDp'); autoCalcPerTerm();">
+            <input type="hidden" id="editDp" value="0">
+          </div>
+          <div class="form-group">
+            <label>Uang Jaminan Kerusakan (Rp) <span style="font-weight: 500; color: var(--text-muted); font-size: 0.72rem;">(Deposit)</span></label>
+            <input type="text" id="editDepositDisplay" placeholder="Contoh: 5.000.000" oninput="formatInputDots(this, 'editDeposit')">
+            <input type="hidden" id="editDeposit" value="0">
+          </div>
         </div>
 
         <div class="form-group">
@@ -2906,6 +2913,10 @@
       document.getElementById('editDp').value = dpVal;
       document.getElementById('editDpDisplay').value = dpVal > 0 ? formatDots(dpVal) : '';
 
+      const depVal = h.depositAmount || 0;
+      document.getElementById('editDeposit').value = depVal;
+      document.getElementById('editDepositDisplay').value = depVal > 0 ? formatDots(depVal) : '';
+
       const sisaSetelahDp = Math.max(0, h.targetPrice - dpVal);
       const perTerm = h.perTermAmount || Math.round(sisaSetelahDp / countVal);
       document.getElementById('editPerTerm').value = perTerm;
@@ -3083,6 +3094,10 @@
       const dpBaru = parseInt(document.getElementById('editDp').value, 10) || 0;
       h.dpAmount = dpBaru;
 
+      const depLama = h.depositAmount || 0;
+      const depBaru = parseInt(document.getElementById('editDeposit').value, 10) || 0;
+      h.depositAmount = depBaru;
+
       h.installmentCount = Math.max(1, parseInt(document.getElementById('editInstallmentCount').value, 10) || 1);
       const sisaSetelahDp = Math.max(0, h.targetPrice - dpBaru);
       h.perTermAmount = parseInt(document.getElementById('editPerTerm').value, 10) || Math.round(sisaSetelahDp / h.installmentCount);
@@ -3098,15 +3113,17 @@
       h.lastPaidDate = document.getElementById('editLastPaid').value;
       h.nextDueDate = document.getElementById('editNextDue').value;
 
-      let dpTr = null;
+      const payDate = h.lastPaidDate || h.startDate || new Date().toISOString().split('T')[0];
+      let lastSyncTr = null;
+
+      // 1. Jika DP diisi saat kontrak baru (paidAmount masih 0), otomatis catat pemasukan DP
       if (dpBaru > 0 && h.paidAmount === 0) {
         h.paidAmount = dpBaru;
-        const payDate = h.lastPaidDate || h.startDate || new Date().toISOString().split('T')[0];
         h.lastPaidDate = payDate;
         if (!h.nextDueDate && h.paidAmount < h.targetPrice) {
           h.nextDueDate = addMonthsToDateStr(payDate, intervalBln);
         }
-        dpTr = {
+        lastSyncTr = {
           date: payDate,
           houseId: h.id,
           unit: h.name,
@@ -3116,11 +3133,28 @@
           amount: dpBaru,
           type: 'in'
         };
-        history.unshift(dpTr);
+        history.unshift(lastSyncTr);
+      }
+
+      // 2. Jika Uang Jaminan baru diisi atau ditambah lewat menu Atur, otomatis catat ke Mutasi & Sheets
+      if (depBaru > depLama) {
+        const selisihDep = depBaru - depLama;
+        const depTr = {
+          date: payDate,
+          houseId: h.id,
+          unit: h.name,
+          category: "Jaminan",
+          subItem: "Deposit Kerusakan",
+          note: `Uang jaminan kerusakan (${h.tenant || h.name})`,
+          amount: selisihDep,
+          type: 'in'
+        };
+        history.unshift(depTr);
+        lastSyncTr = depTr;
       }
 
       saveData();
-      syncToGoogleSheets(dpTr);
+      syncToGoogleSheets(lastSyncTr);
       renderApp();
       closeModal('editHouseModal');
     }
