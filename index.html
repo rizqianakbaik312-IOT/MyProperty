@@ -2116,6 +2116,31 @@
       document.getElementById('customAlarmModal').classList.add('open');
     }
 
+    function renderCustomAlarmManageList() {
+      const listEl = document.getElementById('customAlarmManageList');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+
+      if (!Array.isArray(customAlarms) || customAlarms.length === 0) {
+        listEl.innerHTML = `<li style="font-size:0.8rem; color:var(--text-muted); font-style:italic;">Belum ada pengingat rutin tersimpan.</li>`;
+        return;
+      }
+
+      customAlarms.forEach(ca => {
+        const occ = getNextMonthlyOccurrenceInfo(ca.dayOfMonth);
+        const li = document.createElement('li');
+        li.className = 'custom-alarm-row';
+        li.innerHTML = `
+          <div class="custom-alarm-info">
+            <strong>${ca.title}</strong>
+            <span>Tiap tgl ${ca.dayOfMonth} • Muncul H-${ca.leadDays} (Berikutnya: ${occ.dateStr})${ca.note ? ' • ' + ca.note : ''}</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-danger-soft" onclick="deleteCustomAlarm(${ca.id})">Hapus</button>
+        `;
+        listEl.appendChild(li);
+      });
+    }
+
     function addCustomAlarm(e) {
       e.preventDefault();
       const title = document.getElementById('caTitle').value.trim();
@@ -2126,7 +2151,6 @@
 
       if (!title) return;
 
-      // Gabungkan nominal terformat Rupiah + catatan jika diisi
       let combinedNote = '';
       if (nominal > 0 && rawNote) combinedNote = `Estimasi ${formatRupiah(nominal)} • ${rawNote}`;
       else if (nominal > 0) combinedNote = `Estimasi ${formatRupiah(nominal)}`;
@@ -2141,6 +2165,7 @@
       });
 
       saveData();
+      syncToGoogleSheets(null);
       renderCustomAlarmManageList();
       renderAlarms();
 
@@ -2153,6 +2178,7 @@
     function deleteCustomAlarm(id) {
       customAlarms = customAlarms.filter(x => x.id !== id);
       saveData();
+      syncToGoogleSheets(null);
       renderCustomAlarmManageList();
       renderAlarms();
     }
