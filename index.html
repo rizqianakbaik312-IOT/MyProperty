@@ -2,7 +2,9 @@
 <html lang="id" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Manajemen Kontrakan - Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -1015,6 +1017,7 @@
       .card-actions { grid-template-columns: 1fr 1fr; }
       .card-actions .btn-edit { grid-column: span 2; }
       .form-row { grid-template-columns: 1fr; }
+      .filter-grid { grid-template-columns: 1fr; }
       .alarm-item { grid-template-columns: 1fr; }
       .eval-meta-grid { grid-template-columns: 1fr; }
     }
@@ -1096,16 +1099,16 @@
       <div class="action-bar">
         <button class="btn btn-primary" onclick="openIncomeModal()">💸 Catat Pemasukan (DP / Angsuran / Jaminan)</button>
         <button class="btn btn-orange" onclick="openExpenseModal()">🛠️ Catat Pengeluaran (Kas Owner / Per Rumah)</button>
-        <button class="btn btn-outline" onclick="resetDemoData()">🔄 Reset Contoh</button>
         <button class="btn btn-outline" onclick="exportBackupJSON()">💾 Backup Data</button>
         <button class="btn btn-outline" onclick="document.getElementById('importFileInput').click()">📂 Restore Data</button>
         <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importBackupJSON(event)">
+        <button class="btn btn-outline" onclick="resetDemoData()">🔄 Reset Contoh</button>
       </div>
 
       <!-- Daftar 6 Kontrakan -->
       <div class="section-title">
         <span>Daftar 6 Unit Kontrakan</span>
-        <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">Klik "⚙️ Atur" untuk ubah nama unit, penyewa, target & nominal per termin</span>
+        <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted);">Klik "⚙️ Atur" untuk ubah nama unit, penyewa, DP & termin cicilan</span>
       </div>
       <div class="houses-grid" id="housesGrid"></div>
 
@@ -1457,28 +1460,29 @@
             <label>Skema Angsuran</label>
             <div class="select-wrap">
               <select id="editSchemeSelect" onchange="handleSchemeSelectChange()">
-                <option value="Per Bulan (12x)" data-count="12" data-months="1">Per Bulan (12x)</option>
-                <option value="Per 3 Bulan (4x)" data-count="4" data-months="3">Per 3 Bulan (4x)</option>
-                <option value="Per 4 Bulan (3x)" data-count="3" data-months="4">Per 4 Bulan (3x)</option>
-                <option value="Per 6 Bulan (2x)" data-count="2" data-months="6">Per 6 Bulan (2x)</option>
-                <option value="Lunas Tahunan (1x)" data-count="1" data-months="12">Lunas Tahunan (1x)</option>
-                <option value="Custom" data-count="4" data-months="3">Lainnya (Custom)...</option>
+                <option value="Per Bulan (12x)" data-count="12">Per Bulan (12x)</option>
+                <option value="Per 3 Bulan (4x)" data-count="4">Per 3 Bulan (4x)</option>
+                <option value="Per 4 Bulan (3x)" data-count="3">Per 4 Bulan (3x)</option>
+                <option value="Per 6 Bulan (2x)" data-count="2">Per 6 Bulan (2x)</option>
+                <option value="Lunas Tahunan (1x)" data-count="1">Lunas Tahunan (1x)</option>
+                <option value="Custom">DP + Cicilan (Custom)</option>
               </select>
             </div>
           </div>
           <div class="form-group">
-            <label>Jumlah Bayar (Kali)</label>
-            <input type="number" id="editInstallmentCount" min="1" max="60" value="4" oninput="autoCalcPerTerm()" required>
+            <label>Jumlah Bayar Cicilan (Kali)</label>
+            <input type="number" id="editInstallmentCount" min="1" max="60" value="4" oninput="autoCalcPerTerm(); autoSyncNextDueDate();" required>
           </div>
         </div>
 
-        <div class="form-group" id="customSchemeGroup" style="display: none;">
-          <label>Keterangan Skema Custom</label>
-          <input type="text" id="editSchemeCustom" placeholder="Misal: DP + 4x Cicilan">
+        <div class="form-group" id="dpInputGroup">
+          <label>Nominal DP Awal (Rp) <span style="font-weight: 500; color: var(--text-muted); font-size: 0.74rem;">(Isi 0 jika tanpa DP)</span></label>
+          <input type="text" id="editDpDisplay" placeholder="Contoh: 10.000.000" oninput="formatInputDots(this, 'editDp'); autoCalcPerTerm();">
+          <input type="hidden" id="editDp" value="0">
         </div>
 
         <div class="form-group">
-          <label>Nominal Tagihan Per Bayar / Per Termin (Rp)</label>
+          <label>Tagihan Per Bayar & Jarak Waktu <span id="intervalBadgeText" style="font-weight: 700; color: var(--primary-green); font-size: 0.76rem;"></span></label>
           <input type="text" id="editPerTermDisplay" oninput="formatInputDots(this, 'editPerTerm')" required>
           <input type="hidden" id="editPerTerm">
         </div>
@@ -1496,7 +1500,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Tanggal Terakhir Bayar</label>
+            <label>Tanggal Terakhir Bayar / DP</label>
             <input type="date" id="editLastPaid" onchange="autoSyncNextDueDate()">
           </div>
           <div class="form-group">
@@ -1505,7 +1509,7 @@
           </div>
         </div>
         <p style="font-size: 0.74rem; color: var(--primary-green); margin-top: -6px; margin-bottom: 14px;">
-          💡 Mengubah <strong>Tanggal Terakhir Bayar</strong> atau <strong>Skema Angsuran</strong> otomatis menyesuaikan <strong>Jatuh Tempo Berikutnya</strong>.
+          💡 Rumus otomatis: <strong>(Target - DP) ÷ Jumlah Bayar</strong>, dengan jarak waktu <strong>12 Bulan ÷ Jumlah Bayar</strong> dari tanggal bayar terakhir.
         </p>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Simpan Perubahan</button>
@@ -1520,7 +1524,6 @@
       "Maintenance Tidak Rutin": ["Tukang (Atap Bocor)", "Perbaikan Keran / Pipa", "Cat Ulang Dinding", "Perbaikan Kunci / Pintu"]
     };
 
-    // Biaya keluar tiap unit murni biaya spesifik rumah tsb (tidak dicampur pengeluaran serempak)
     const defaultHouses = [
       {
         id: 1,
@@ -1529,6 +1532,7 @@
         phone: "6281234567801",
         email: "andi.wijaya@email.com",
         targetPrice: 150000000,
+        dpAmount: 0,
         paidAmount: 150000000,
         depositAmount: 5000000,
         expenseAmount: 1200000,
@@ -1547,6 +1551,7 @@
         phone: "6281234567802",
         email: "rina.k@email.com",
         targetPrice: 120000000,
+        dpAmount: 0,
         paidAmount: 80000000,
         depositAmount: 4000000,
         expenseAmount: 1700000,
@@ -1565,12 +1570,13 @@
         phone: "6281234567803",
         email: "",
         targetPrice: 135000000,
+        dpAmount: 15000000,
         paidAmount: 45000000,
         depositAmount: 5000000,
         expenseAmount: 4600000,
-        scheme: "Per 3 Bulan (4x)",
+        scheme: "DP + 4x (Per 3 Bln)",
         installmentCount: 4,
-        perTermAmount: 33750000,
+        perTermAmount: 30000000,
         startDate: "2026-05-01",
         endDate: "2027-05-01",
         nextDueDate: "2026-11-21",
@@ -1583,6 +1589,7 @@
         phone: "6281234567804",
         email: "dimas.kel@email.com",
         targetPrice: 110000000,
+        dpAmount: 0,
         paidAmount: 110000000,
         depositAmount: 3500000,
         expenseAmount: 800000,
@@ -1601,6 +1608,7 @@
         phone: "6281234567805",
         email: "",
         targetPrice: 125000000,
+        dpAmount: 0,
         paidAmount: 62500000,
         depositAmount: 4000000,
         expenseAmount: 1950000,
@@ -1619,6 +1627,7 @@
         phone: "",
         email: "",
         targetPrice: 115000000,
+        dpAmount: 0,
         paidAmount: 0,
         depositAmount: 0,
         expenseAmount: 0,
@@ -1632,7 +1641,6 @@
       }
     ];
 
-    // Pengeluaran Bersama Komplek tercatat 1x utuh dari Kas Owner
     const defaultSharedExpense = 1150000;
 
     const defaultHistory = [
@@ -1646,21 +1654,21 @@
       { date: "2026-06-10", houseId: 5, unit: "Kontrakan 05", category: "DP", subItem: "DP Awal 50%", note: "Masuk kontrak baru", amount: 62500000, type: "in" }
     ];
 
-    let houses = JSON.parse(localStorage.getItem('om_v9_houses')) || JSON.parse(JSON.stringify(defaultHouses));
-    let sharedExpenseTotal = localStorage.getItem('om_v9_shared_exp') !== null
-      ? parseInt(localStorage.getItem('om_v9_shared_exp'), 10)
+    let houses = JSON.parse(localStorage.getItem('om_v10_houses')) || JSON.parse(JSON.stringify(defaultHouses));
+    let sharedExpenseTotal = localStorage.getItem('om_v10_shared_exp') !== null
+      ? parseInt(localStorage.getItem('om_v10_shared_exp'), 10)
       : defaultSharedExpense;
-    let history = JSON.parse(localStorage.getItem('om_v9_history')) || JSON.parse(JSON.stringify(defaultHistory));
-    let subCategories = JSON.parse(localStorage.getItem('om_v9_subcats')) || JSON.parse(JSON.stringify(defaultSubCategories));
-    let currentTheme = localStorage.getItem('om_v9_theme') || 'light';
-    let securityPin = localStorage.getItem('om_v9_pin') || '1234';
+    let history = JSON.parse(localStorage.getItem('om_v10_history')) || JSON.parse(JSON.stringify(defaultHistory));
+    let subCategories = JSON.parse(localStorage.getItem('om_v10_subcats')) || JSON.parse(JSON.stringify(defaultSubCategories));
+    let currentTheme = localStorage.getItem('om_v10_theme') || 'light';
+    let securityPin = localStorage.getItem('om_v10_pin') || '1234';
     let pendingPinTab = 'koreksi';
 
     function saveData() {
-      localStorage.setItem('om_v9_houses', JSON.stringify(houses));
-      localStorage.setItem('om_v9_shared_exp', String(sharedExpenseTotal));
-      localStorage.setItem('om_v9_history', JSON.stringify(history));
-      localStorage.setItem('om_v9_subcats', JSON.stringify(subCategories));
+      localStorage.setItem('om_v10_houses', JSON.stringify(houses));
+      localStorage.setItem('om_v10_shared_exp', String(sharedExpenseTotal));
+      localStorage.setItem('om_v10_history', JSON.stringify(history));
+      localStorage.setItem('om_v10_subcats', JSON.stringify(subCategories));
     }
 
     // Formatters & Date Helpers
@@ -1715,27 +1723,31 @@
       return `${targetYear}-${mm}-${dd}`;
     }
 
+    // Jarak antar bayar = 12 bulan dibagi jumlah bayar (kali)
     function getSchemeIntervalMonths(schemeName, installmentCount) {
-      if (schemeName === 'Per Bulan (12x)') return 1;
-      if (schemeName === 'Per 3 Bulan (4x)') return 3;
-      if (schemeName === 'Per 4 Bulan (3x)') return 4;
-      if (schemeName === 'Per 6 Bulan (2x)') return 6;
-      if (schemeName === 'Lunas Tahunan (1x)') return 12;
       const cnt = Math.max(1, parseInt(installmentCount, 10) || 1);
       return Math.max(1, Math.round(12 / cnt));
     }
 
+    // Hitung detail termin berdasarkan (Target - DP) dibagi Jumlah Bayar
     function getInstallmentInfo(h) {
       const totalCount = Math.max(1, parseInt(h.installmentCount, 10) || 1);
+      const dpVal = Math.max(0, parseInt(h.dpAmount, 10) || 0);
+      const remainingAfterDp = Math.max(0, h.targetPrice - dpVal);
+
       const perTerm = h.perTermAmount && h.perTermAmount > 0
         ? h.perTermAmount
-        : Math.round(h.targetPrice / totalCount);
+        : Math.round(remainingAfterDp / totalCount);
+
       const sisaTarget = Math.max(0, h.targetPrice - h.paidAmount);
+      const intervalMonths = getSchemeIntervalMonths(h.scheme, totalCount);
 
       if (sisaTarget === 0) {
         return {
           totalCount,
+          dpVal,
           perTerm,
+          intervalMonths,
           sisaTarget: 0,
           paidTerms: totalCount,
           nextTermNumber: totalCount,
@@ -1744,14 +1756,21 @@
         };
       }
 
-      const paidTerms = Math.min(totalCount - 1, Math.floor(h.paidAmount / perTerm));
+      const paidInstallmentsNominal = Math.max(0, h.paidAmount - dpVal);
+      const paidTerms = perTerm > 0
+        ? Math.min(totalCount - 1, Math.floor(paidInstallmentsNominal / perTerm))
+        : 0;
       const nextTermNumber = paidTerms + 1;
-      const remainingTermsCount = Math.max(1, Math.ceil(sisaTarget / perTerm));
+      const remainingTermsCount = perTerm > 0
+        ? Math.max(1, Math.ceil(sisaTarget / perTerm))
+        : 1;
       const currentDueNominal = Math.min(sisaTarget, perTerm);
 
       return {
         totalCount,
+        dpVal,
         perTerm,
+        intervalMonths,
         sisaTarget,
         paidTerms,
         nextTermNumber,
@@ -1768,7 +1787,7 @@
 
     function toggleTheme() {
       currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-      localStorage.setItem('om_v9_theme', currentTheme);
+      localStorage.setItem('om_v10_theme', currentTheme);
       applyTheme();
     }
 
@@ -1780,7 +1799,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Render Utama (Kas Terpusat Owner)
+    // Render Utama
     function renderApp() {
       let totalIn = 0;
       let totalUnitExpenses = 0;
@@ -1840,7 +1859,7 @@
           alerts.push({
             title: `⚠️ ${h.name} (${h.tenant}) — Jatuh Tempo ${waktuText}`,
             desc: `Tagihan Angsuran ke-${info.nextTermNumber} (dari ${info.totalCount}x) sebesar ${formatRupiah(info.currentDueNominal)} dari total sisa ${formatRupiah(info.sisaTarget)}`,
-            highlight: `Masih sisa ${info.remainingTermsCount}x pembayaran lagi • Skema: ${h.scheme}`,
+            highlight: `Masih sisa ${info.remainingTermsCount}x pembayaran lagi • Interval: per ${info.intervalMonths} bulan`,
             phone: h.phone,
             msg: `Halo ${h.tenant}, menginformasikan pengingat pembayaran ${h.name} untuk Angsuran ke-${info.nextTermNumber} (dari ${info.totalCount}x kesepakatan) sebesar ${formatRupiah(info.currentDueNominal)} yang jatuh tempo pada ${formatDateIndo(h.nextDueDate)}. Total sisa kewajiban: ${formatRupiah(info.sisaTarget)} (${info.remainingTermsCount}x bayar lagi). Terima kasih.`
           });
@@ -1882,7 +1901,7 @@
       });
     }
 
-    // ==================== KARTU KONTRAKAN (MURNI BIAYA SPESIFIK RUMAH TSB) ====================
+    // ==================== KARTU KONTRAKAN ====================
     function renderHouses() {
       const grid = document.getElementById('housesGrid');
       grid.innerHTML = '';
@@ -1916,7 +1935,7 @@
 
         const terminBannerHtml = isVacant
           ? `<div class="termin-highlight-box" style="background:var(--mini-box-bg); border-color:var(--border-soft);">
-              <span>Tarif Kesepakatan (${h.scheme}):</span>
+              <span>Tarif (${h.scheme}):</span>
               <strong>${formatRupiah(info.perTerm)} / bayar</strong>
             </div>`
           : (info.sisaTarget === 0
@@ -1930,7 +1949,6 @@
                 </div>`
             );
 
-        // Hanya rincian pengeluaran spesifik milik rumah ini (bukan pengeluaran bersama)
         const unitExpenses = history.filter(item => item.type === 'out' && item.houseId === h.id).map(item => ({
           date: item.date,
           label: `${item.subItem || item.category}${item.note ? ' — ' + item.note : ''}`,
@@ -1961,6 +1979,8 @@
           : (info.sisaTarget === 0
               ? `Halo ${h.tenant}, terima kasih pembayaran ${h.name} sebesar ${formatRupiah(h.targetPrice)} sudah lunas 100%.`
               : `Halo ${h.tenant}, berikut rincian ${h.name}: Tagihan Angsuran ke-${info.nextTermNumber} (dari ${info.totalCount}x) sebesar ${formatRupiah(info.currentDueNominal)} jatuh tempo pada ${formatDateIndo(h.nextDueDate)}. Total sisa target: ${formatRupiah(info.sisaTarget)} (${info.remainingTermsCount}x bayar lagi). Terima kasih.`);
+
+        const dpInfoText = info.dpVal > 0 ? `DP ${formatRupiah(info.dpVal)} • ` : '';
 
         const card = document.createElement('div');
         card.className = `house-card ${statusClass}`;
@@ -1999,7 +2019,7 @@
               </div>
               <div class="meta-item">
                 <span>Skema & Nominal/Bayar</span>
-                <strong>${h.scheme} (${formatRupiah(info.perTerm)})</strong>
+                <strong>${dpInfoText}${info.totalCount}x (${formatRupiah(info.perTerm)} / ${info.intervalMonths} bln)</strong>
               </div>
               <div class="meta-item">
                 <span>Jatuh Tempo Berikutnya</span>
@@ -2039,7 +2059,7 @@
       });
     }
 
-    // ==================== EVALUASI BIAYA PERAWATAN (UNIT + PENGELUARAN BERSAMA KAS OWNER) ====================
+    // ==================== EVALUASI BIAYA PERAWATAN ====================
     function openEvaluationModal() {
       document.getElementById('evalPeriodSelect').value = 'ALL';
       renderEvaluationDetails();
@@ -2070,7 +2090,6 @@
         return d >= cutoff;
       });
 
-      // 1. Kartu Pengeluaran Bersama Komplek (Dari Kas Owner)
       let sharedPeriodCost = period === 'ALL' ? sharedExpenseTotal : 0;
       const sharedItems = [];
       filteredExpenses.forEach(exp => {
@@ -2113,7 +2132,6 @@
       `;
       container.appendChild(sharedBox);
 
-      // 2. Peringkat Biaya Spesifik Masing-masing Unit Kontrakan
       const unitStats = houses.map(h => {
         let periodExpense = period === 'ALL' ? h.expenseAmount : 0;
         let items = [];
@@ -2358,14 +2376,14 @@
         return;
       }
       securityPin = p1;
-      localStorage.setItem('om_v9_pin', securityPin);
+      localStorage.setItem('om_v10_pin', securityPin);
       document.getElementById('newPinInput').value = '';
       document.getElementById('confirmPinInput').value = '';
       alert("PIN Keamanan berhasil diperbarui!");
       closeModal('pinModal');
     }
 
-    // Mutasi & Filter
+    // ==================== MUTASI & FILTER RAPI ====================
     function populateMutasiFilters() {
       const fUnit = document.getElementById('filterUnit');
       const prevUnit = fUnit.value || 'ALL';
@@ -2452,7 +2470,7 @@
       document.getElementById('mutasiSumOut').textContent = formatRupiah(sumOut);
     }
 
-    // Modal Controls
+    // ==================== MODAL CONTROLS ====================
     function populateHouseSelect(selectId, selectedId = null) {
       const select = document.getElementById(selectId);
       select.innerHTML = '';
@@ -2572,21 +2590,21 @@
 
       const schemeSel = document.getElementById('editSchemeSelect');
       const isPreset = [...schemeSel.options].some(o => o.value === h.scheme && o.value !== 'Custom');
-      if (isPreset) {
-        schemeSel.value = h.scheme;
-        document.getElementById('editSchemeCustom').value = '';
-      } else {
-        schemeSel.value = 'Custom';
-        document.getElementById('editSchemeCustom').value = h.scheme || '';
-      }
-      document.getElementById('customSchemeGroup').style.display = schemeSel.value === 'Custom' ? 'block' : 'none';
+      schemeSel.value = isPreset ? h.scheme : 'Custom';
 
       const countVal = h.installmentCount || 4;
       document.getElementById('editInstallmentCount').value = countVal;
 
-      const perTerm = h.perTermAmount || Math.round(h.targetPrice / countVal);
+      const dpVal = h.dpAmount || 0;
+      document.getElementById('editDp').value = dpVal;
+      document.getElementById('editDpDisplay').value = dpVal > 0 ? formatDots(dpVal) : '';
+
+      const sisaSetelahDp = Math.max(0, h.targetPrice - dpVal);
+      const perTerm = h.perTermAmount || Math.round(sisaSetelahDp / countVal);
       document.getElementById('editPerTerm').value = perTerm;
       document.getElementById('editPerTermDisplay').value = formatDots(perTerm);
+
+      updateIntervalBadgeLabel();
 
       document.getElementById('editStart').value = h.startDate;
       document.getElementById('editEnd').value = h.endDate;
@@ -2595,15 +2613,19 @@
       document.getElementById('editHouseModal').classList.add('open');
     }
 
+    function updateIntervalBadgeLabel() {
+      const cnt = Math.max(1, parseInt(document.getElementById('editInstallmentCount').value, 10) || 1);
+      const months = getSchemeIntervalMonths('', cnt);
+      document.getElementById('intervalBadgeText').textContent = `(Jarak: per ${months} bulan sekali)`;
+    }
+
     function autoSyncNextDueDate() {
       const lastPaidVal = document.getElementById('editLastPaid').value;
+      const cntVal = Math.max(1, parseInt(document.getElementById('editInstallmentCount').value, 10) || 1);
+      const monthsToAdd = getSchemeIntervalMonths('', cntVal);
+      updateIntervalBadgeLabel();
+
       if (!lastPaidVal) return;
-
-      const sel = document.getElementById('editSchemeSelect');
-      const schemeVal = sel.value;
-      const cntVal = parseInt(document.getElementById('editInstallmentCount').value, 10) || 1;
-      const monthsToAdd = getSchemeIntervalMonths(schemeVal, cntVal);
-
       const nextDueCalculated = addMonthsToDateStr(lastPaidVal, monthsToAdd);
       if (nextDueCalculated) {
         document.getElementById('editNextDue').value = nextDueCalculated;
@@ -2613,25 +2635,27 @@
     function handleSchemeSelectChange() {
       const sel = document.getElementById('editSchemeSelect');
       const val = sel.value;
-      document.getElementById('customSchemeGroup').style.display = val === 'Custom' ? 'block' : 'none';
       const selectedOpt = sel.options[sel.selectedIndex];
       const defaultCnt = selectedOpt.getAttribute('data-count');
+
       if (defaultCnt && val !== 'Custom') {
         document.getElementById('editInstallmentCount').value = defaultCnt;
-        autoCalcPerTerm();
       }
+      autoCalcPerTerm();
       autoSyncNextDueDate();
     }
 
     function autoCalcPerTerm() {
       const target = parseInt(document.getElementById('editTarget').value, 10) || 0;
+      const dp = parseInt(document.getElementById('editDp').value, 10) || 0;
       const cnt = Math.max(1, parseInt(document.getElementById('editInstallmentCount').value, 10) || 1);
-      const perTerm = Math.round(target / cnt);
+
+      const sisaSetelahDp = Math.max(0, target - dp);
+      const perTerm = Math.round(sisaSetelahDp / cnt);
+
       document.getElementById('editPerTerm').value = perTerm;
       document.getElementById('editPerTermDisplay').value = formatDots(perTerm);
-      if (document.getElementById('editSchemeSelect').value === 'Custom') {
-        autoSyncNextDueDate();
-      }
+      updateIntervalBadgeLabel();
     }
 
     function closeModal(id) {
@@ -2642,7 +2666,7 @@
       document.getElementById('alarmPanel').classList.toggle('active');
     }
 
-    // Form Submissions
+    // ==================== FORM SUBMISSIONS ====================
     function submitIncome(e) {
       e.preventDefault();
       const houseId = parseInt(document.getElementById('incHouseId').value, 10);
@@ -2657,6 +2681,12 @@
       if (type === 'Jaminan') {
         house.depositAmount += amount;
       } else {
+        if (type === 'DP') {
+          house.dpAmount = (house.dpAmount || 0) + amount;
+          const sisaSetelahDp = Math.max(0, house.targetPrice - house.dpAmount);
+          const cnt = Math.max(1, house.installmentCount || 1);
+          house.perTermAmount = Math.round(sisaSetelahDp / cnt);
+        }
         house.paidAmount += amount;
         house.lastPaidDate = date;
         if (house.paidAmount < house.targetPrice) {
@@ -2695,7 +2725,6 @@
       if (amount <= 0) return alert("Nominal harus lebih dari 0.");
 
       if (mode === 'serempak') {
-        // Keluar 1x utuh langsung dari Saldo Bersih Kas Owner (tidak membebani masing-masing unit)
         sharedExpenseTotal += amount;
 
         history.unshift({
@@ -2740,18 +2769,42 @@
       h.email = document.getElementById('editEmail').value.trim();
       h.targetPrice = parseInt(document.getElementById('editTarget').value, 10) || 0;
 
-      const selScheme = document.getElementById('editSchemeSelect').value;
-      h.scheme = selScheme === 'Custom'
-        ? (document.getElementById('editSchemeCustom').value.trim() || 'Custom')
-        : selScheme;
+      const dpBaru = parseInt(document.getElementById('editDp').value, 10) || 0;
+      h.dpAmount = dpBaru;
 
       h.installmentCount = Math.max(1, parseInt(document.getElementById('editInstallmentCount').value, 10) || 1);
-      h.perTermAmount = parseInt(document.getElementById('editPerTerm').value, 10) || Math.round(h.targetPrice / h.installmentCount);
+      const sisaSetelahDp = Math.max(0, h.targetPrice - dpBaru);
+      h.perTermAmount = parseInt(document.getElementById('editPerTerm').value, 10) || Math.round(sisaSetelahDp / h.installmentCount);
+
+      const selScheme = document.getElementById('editSchemeSelect');
+      const intervalBln = getSchemeIntervalMonths(selScheme.value, h.installmentCount);
+      h.scheme = selScheme.value === 'Custom'
+        ? (dpBaru > 0 ? `DP + ${h.installmentCount}x (Per ${intervalBln} Bln)` : `${h.installmentCount}x (Per ${intervalBln} Bln)`)
+        : selScheme.value;
 
       h.startDate = document.getElementById('editStart').value;
       h.endDate = document.getElementById('editEnd').value;
       h.lastPaidDate = document.getElementById('editLastPaid').value;
       h.nextDueDate = document.getElementById('editNextDue').value;
+
+      if (dpBaru > 0 && h.paidAmount === 0) {
+        h.paidAmount = dpBaru;
+        const payDate = h.lastPaidDate || h.startDate || new Date().toISOString().split('T')[0];
+        h.lastPaidDate = payDate;
+        if (!h.nextDueDate && h.paidAmount < h.targetPrice) {
+          h.nextDueDate = addMonthsToDateStr(payDate, intervalBln);
+        }
+        history.unshift({
+          date: payDate,
+          houseId: h.id,
+          unit: h.name,
+          category: "DP",
+          subItem: "DP Awal Kontrak",
+          note: `DP awal (Sisa ${formatRupiah(sisaSetelahDp)} dicicil ${h.installmentCount}x)`,
+          amount: dpBaru,
+          type: 'in'
+        });
+      }
 
       saveData();
       renderApp();
@@ -2760,10 +2813,10 @@
 
     function resetDemoData() {
       if (confirm("Kembalikan seluruh data ke contoh awal?")) {
-        localStorage.removeItem('om_v9_houses');
-        localStorage.removeItem('om_v9_shared_exp');
-        localStorage.removeItem('om_v9_history');
-        localStorage.removeItem('om_v9_subcats');
+        localStorage.removeItem('om_v10_houses');
+        localStorage.removeItem('om_v10_shared_exp');
+        localStorage.removeItem('om_v10_history');
+        localStorage.removeItem('om_v10_subcats');
         houses = JSON.parse(JSON.stringify(defaultHouses));
         sharedExpenseTotal = defaultSharedExpense;
         history = JSON.parse(JSON.stringify(defaultHistory));
@@ -2773,7 +2826,7 @@
       }
     }
 
-    // Backup & Restore Data (Wajib untuk keamanan data di APK HP)
+    // Backup & Restore Data
     function exportBackupJSON() {
       const backupPayload = {
         app: "Manajemen Kontrakan",
