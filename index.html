@@ -1,0 +1,2653 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Manajemen Kontrakan Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-cream: #F6F5F0;
+      --card-white: #FFFFFF;
+      --primary-green: #2D5A27;
+      --primary-dark: #1E3F1A;
+      --primary-light: #E8F3E6;
+      --accent-orange: #D97736;
+      --accent-orange-light: #FDF1E8;
+      --danger-red: #C84B31;
+      --danger-light: #FDECE8;
+      --text-dark: #222521;
+      --text-muted: #6C726A;
+      --border-soft: #E5E2D9;
+      --input-bg: #FCFBF9;
+      --mini-box-bg: #FAF9F6;
+      --shadow-soft: 0 8px 24px rgba(34, 37, 33, 0.06);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    [data-theme="dark"] {
+      --bg-cream: #121411;
+      --card-white: #1C1F1B;
+      --primary-green: #589B4F;
+      --primary-dark: #254221;
+      --primary-light: rgba(88, 155, 79, 0.18);
+      --accent-orange: #E58947;
+      --accent-orange-light: rgba(229, 137, 71, 0.16);
+      --danger-red: #E3644B;
+      --danger-light: rgba(227, 100, 75, 0.18);
+      --text-dark: #EAECE9;
+      --text-muted: #9BA199;
+      --border-soft: #2D322B;
+      --input-bg: #242822;
+      --mini-box-bg: #232721;
+      --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-cream);
+      color: var(--text-dark);
+      padding-bottom: 92px;
+      line-height: 1.5;
+      transition: background-color 0.25s, color 0.25s;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, var(--primary-green), var(--primary-dark));
+      color: white;
+      padding: 18px 20px 34px;
+      border-bottom-left-radius: 26px;
+      border-bottom-right-radius: 26px;
+      box-shadow: 0 4px 16px rgba(45, 90, 39, 0.2);
+    }
+
+    .header-top {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .brand-icon {
+      background: rgba(255, 255, 255, 0.16);
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 21px;
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .brand p {
+      font-size: 0.76rem;
+      opacity: 0.86;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .hdr-icon-btn {
+      background: rgba(255, 255, 255, 0.18);
+      border: none;
+      color: white;
+      height: 38px;
+      padding: 0 11px;
+      border-radius: 11px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .alarm-btn {
+      background: var(--accent-orange);
+      border: none;
+      color: white;
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 11px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .badge-count {
+      background: #FFF;
+      color: var(--danger-red);
+      font-weight: 800;
+      font-size: 0.72rem;
+      padding: 1px 6px;
+      border-radius: 20px;
+    }
+
+    /* Container & Views */
+    .container {
+      max-width: 960px;
+      margin: -22px auto 0;
+      padding: 0 16px;
+    }
+
+    .page-view { display: none; animation: fadeIn 0.22s ease; }
+    .page-view.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ==================== EXECUTIVE SUMMARY CARD (CLICKABLE ALA SUPERAPP) ==================== */
+    .exec-summary-card {
+      background: var(--card-white);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-soft);
+      border: 1.5px solid var(--border-soft);
+      margin-bottom: 18px;
+      cursor: pointer;
+      transition: transform 0.18s, border-color 0.18s;
+      position: relative;
+    }
+
+    .exec-summary-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-green);
+    }
+
+    .exec-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .exec-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .exec-tap-hint {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--primary-green);
+      background: var(--primary-light);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .exec-main-balance {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--primary-green);
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 14px;
+      letter-spacing: -0.5px;
+    }
+
+    .exec-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border-soft);
+    }
+
+    .exec-metric-item {
+      background: var(--mini-box-bg);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-soft);
+    }
+
+    .exec-metric-item span {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .exec-metric-item strong {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Quick Menu Grid (Ala Gojek Entry Icons) */
+    .quick-menu-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .qmenu-btn {
+      background: var(--card-white);
+      border: 1.5px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      padding: 14px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .qmenu-btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-green);
+    }
+
+    .qmenu-ico {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .qmenu-btn span {
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    /* Section Header */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .section-header h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .section-sub-hint {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Compact House List (Clean Cards on Dashboard) */
+    .compact-houses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .compact-house-card {
+      background: var(--card-white);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-soft);
+      border: 1.5px solid var(--border-soft);
+      cursor: pointer;
+      transition: transform 0.18s, border-color 0.18s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .compact-house-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-green);
+    }
+
+    .compact-house-card.status-lunas { border-left: 5px solid var(--primary-green); }
+    .compact-house-card.status-cicil { border-left: 5px solid var(--accent-orange); }
+    .compact-house-card.status-kosong { border-left: 5px solid #9BA199; }
+
+    .ch-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .ch-title {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    .ch-tenant {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .status-pill {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pill-lunas { background: var(--primary-light); color: var(--primary-green); }
+    .pill-cicil { background: var(--accent-orange-light); color: var(--accent-orange); }
+    .pill-kosong { background: var(--mini-box-bg); color: var(--text-muted); border: 1px solid var(--border-soft); }
+
+    .ch-progress-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .ch-progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 7px;
+      background: var(--border-soft);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.35s ease;
+    }
+
+    .ch-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      padding-top: 6px;
+      border-top: 1px dashed var(--border-soft);
+    }
+
+    .ch-footer strong {
+      color: var(--primary-green);
+      font-weight: 700;
+    }
+
+    /* ==================== SUB-PAGE HEADER (BACK BUTTON) ==================== */
+    .subpage-topbar {
+      background: var(--card-white);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border-soft);
+    }
+
+    .back-btn {
+      background: var(--bg-cream);
+      border: 1px solid var(--border-soft);
+      color: var(--text-dark);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-weight: 800;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Detail Card Components */
+    .detail-box {
+      background: var(--card-white);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border-soft);
+      margin-bottom: 16px;
+    }
+
+    .detail-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 14px 0;
+    }
+
+    .info-tile {
+      background: var(--mini-box-bg);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm);
+      padding: 11px 13px;
+    }
+
+    .info-tile span {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .info-tile strong {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Buttons */
+    .btn {
+      border: none;
+      padding: 11px 16px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 0.84rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--primary-green); color: white; }
+    .btn-orange { background: var(--accent-orange); color: white; }
+    .btn-outline { background: var(--card-white); color: var(--text-dark); border: 1.5px solid var(--border-soft); }
+    .btn-danger-soft { background: var(--danger-light); color: var(--danger-red); }
+    .btn-wa { background: #25D366; color: white; text-decoration: none; }
+    .btn-sm { padding: 8px 12px; font-size: 0.78rem; border-radius: var(--radius-sm); }
+
+    /* Hold 3 Detik Reset Button */
+    .btn-hold-reset {
+      position: relative;
+      overflow: hidden;
+      background: var(--danger-light);
+      color: var(--danger-red);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .btn-hold-reset .hold-bar {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 0%;
+      background: rgba(200, 75, 49, 0.28);
+      pointer-events: none;
+    }
+
+    .btn-hold-reset.holding .hold-bar {
+      width: 100%;
+      transition: width 3s linear;
+    }
+
+    .btn-hold-reset span.hold-label { position: relative; z-index: 1; }
+
+    /* Alarm List */
+    .alarm-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .alarm-item {
+      background: var(--card-white);
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.84rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      border: 1.5px solid var(--border-soft);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .alarm-item-title { font-weight: 800; color: var(--text-dark); margin-bottom: 2px; }
+    .alarm-item-desc { font-size: 0.79rem; color: var(--text-muted); }
+    .alarm-item-highlight { font-size: 0.76rem; font-weight: 700; color: var(--accent-orange); margin-top: 3px; }
+
+    /* Mutasi Table */
+    .history-card {
+      background: var(--card-white);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border-soft);
+      overflow-x: auto;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+      min-width: 680px;
+    }
+
+    th {
+      text-align: left;
+      padding: 11px 12px;
+      color: var(--text-muted);
+      border-bottom: 2px solid var(--border-soft);
+      font-weight: 700;
+    }
+
+    th.col-num, td.col-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    td { padding: 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+    .tag-in { color: var(--primary-green); font-weight: 800; }
+    .tag-out { color: var(--danger-red); font-weight: 800; }
+
+    /* Forms & Modals */
+    .select-wrap { position: relative; width: 100%; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--primary-green);
+      font-weight: 800;
+      pointer-events: none;
+    }
+
+    .form-group { margin-bottom: 13px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; }
+
+    input, select {
+      width: 100%;
+      height: 43px;
+      padding: 0 13px;
+      border: 1.5px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-weight: 600;
+      background: var(--input-bg);
+      color: var(--text-dark);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary-green);
+      background: var(--card-white);
+    }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; align-items: end; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 20, 17, 0.62);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1000;
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: var(--card-white);
+      width: 100%;
+      max-width: 500px;
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-soft);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .modal-header h3 { font-size: 1.05rem; font-weight: 800; }
+    .close-modal {
+      background: var(--bg-cream);
+      border: 1px solid var(--border-soft);
+      color: var(--text-dark);
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--card-white);
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 12px;
+      z-index: 900;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 0.76rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .nav-btn.active { background: var(--primary-light); color: var(--primary-green); }
+    .nav-btn span.ico { font-size: 1.25rem; }
+
+    @media (max-width: 600px) {
+      .exec-metrics-grid { grid-template-columns: 1fr; }
+      .quick-menu-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-row { grid-template-columns: 1fr; }
+      .filter-grid { grid-template-columns: 1fr; }
+      .alarm-item { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-top">
+      <div class="brand">
+        <div class="brand-icon">🏡</div>
+        <div>
+          <h1>Manajemen Kontrakan</h1>
+          <p>Sistem Kas & Properti Terpusat</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <button class="hdr-icon-btn" onclick="openPinSecurityModal()" title="PIN & Koreksi">🔐 PIN</button>
+        <button class="hdr-icon-btn" onclick="toggleTheme()" id="themeBtn">🌓</button>
+        <button class="alarm-btn" onclick="openAlarmTab()">
+          🔔 <span class="badge-count" id="alarmCount">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- ==================== HALAMAN 1: BERANDA (RINGKAS & BERSIH ALA SUPERAPP) ==================== -->
+    <div id="viewBeranda" class="page-view active">
+      
+      <!-- 1. EXECUTIVE SUMMARY CARD (Klik untuk buka Rincian Output Keuangan) -->
+      <div class="exec-summary-card" onclick="openSummaryDetailView()">
+        <div class="exec-top-bar">
+          <span class="exec-label">SALDO BERSIH</span>
+          <span class="exec-tap-hint">Lihat Rincian & Evaluasi </span>
+        </div>
+        <div class="exec-main-balance" id="execSaldoBersih">Rp 0</div>
+
+        <div class="exec-metrics-grid">
+          <div class="exec-metric-item">
+            <span>CASH IN</span>
+            <strong style="color: var(--primary-green);" id="execCashIn">Rp 0</strong>
+          </div>
+          <div class="exec-metric-item">
+            <span>CASH OUT</span>
+            <strong style="color: var(--danger-red);" id="execCashOut">Rp 0</strong>
+          </div>
+          <div class="exec-metric-item">
+            <span>TOTAL JAMINAN</span>
+            <strong style="color: var(--accent-orange);" id="execJaminan">Rp 0</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- KOTAK ALARM MENDESAK OTOMATIS DI BERANDA (Muncul hanya jika ada H-7 / Rutin) -->
+      <div id="homeUrgentAlarmBox" style="display:none; background:var(--accent-orange-light); border:1.5px solid var(--accent-orange); border-radius:var(--radius-md); padding:13px 15px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong style="font-size:0.84rem; color:var(--accent-orange);">⏰ Tagihan</strong>
+          <button type="button" class="btn btn-sm btn-outline" style="padding:4px 10px; font-size:0.74rem;" onclick="openAlarmTab()">Semua Alarm </button>
+        </div>
+        <div id="homeUrgentAlarmList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+      <!-- 2. MENU ENTRY CEPAT (INPUT TERPISAH) -->
+      <div class="quick-menu-grid">
+        <button class="qmenu-btn" onclick="openAddHouseModal()">
+          <div class="qmenu-ico" style="background: var(--primary-light); color: var(--primary-green);">➕</div>
+          <span>Tambah Kontrakan</span>
+        </button>
+        <button class="qmenu-btn" onclick="openIncomeModal()">
+          <div class="qmenu-ico" style="background: var(--primary-light); color: var(--primary-green);">💸</div>
+          <span>Catat Pemasukan</span>
+        </button>
+        <button class="qmenu-btn" onclick="openExpenseModal()">
+          <div class="qmenu-ico" style="background: var(--accent-orange-light); color: var(--accent-orange);">🛠️</div>
+          <span>Catat Pengeluaran</span>
+        </button>
+        <button class="qmenu-btn" onclick="openAlarmTab()">
+          <div class="qmenu-ico" style="background: var(--danger-light); color: var(--danger-red);">⏰</div>
+          <span>Tagihan</span>
+        </button>
+      </div>
+
+      <!-- 3. DAFTAR UNIT KONTRAKAN (RINGKAS - KLIK KARTU UNTUK DETAIL) -->
+      <div class="section-header">
+        <h2 id="unitCountHeader">Daftar Unit Kontrakan (0 Unit)</h2>
+      </div>
+      <div class="compact-houses-grid" id="compactHousesGrid"></div>
+
+    </div>
+
+    <!-- ==================== HALAMAN DETAIL 1A: RINCIAN EXECUTIVE SUMMARY ==================== -->
+    <div id="viewSummaryDetail" class="page-view">
+      <div class="subpage-topbar">
+        <button class="back-btn" onclick="goHome()"> Kembali</button>
+        <strong style="font-size: 0.92rem;">Rincian Kas & Evaluasi Properti</strong>
+        <button class="btn btn-sm btn-outline" onclick="openPinSecurityModal('koreksi')">🔐 Koreksi</button>
+      </div>
+
+      <div class="detail-box">
+        <div class="exec-label">RINGKASAN ARUS KAS & KEWAJIBAN</div>
+        <div class="detail-grid-2">
+          <div class="info-tile">
+            <span>Saldo Bersih</span>
+            <strong style="color: var(--primary-green);" id="detSaldoBersih">Rp 0</strong>
+          </div>
+          <div class="info-tile">
+            <span>Total Jaminan</span>
+            <strong style="color: var(--accent-orange);" id="detTotalJaminan">Rp 0</strong>
+          </div>
+          <div class="info-tile">
+            <span>Cash In</span>
+            <strong style="color: var(--primary-green);" id="detCashIn">Rp 0</strong>
+          </div>
+          <div class="info-tile">
+            <span>Cash Out</span>
+            <strong style="color: var(--danger-red);" id="detCashOut">Rp 0</strong>
+          </div>
+          <div class="info-tile">
+            <span>Total Piutang</span>
+            <strong style="color: var(--accent-orange);" id="detPiutang">Rp 0</strong>
+          </div>
+          <div class="info-tile">
+            <span>Biaya Bersama</span>
+            <strong style="color: var(--danger-red);" id="detSharedExp">Rp 0</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; flex-wrap:wrap;">
+          <h3 style="font-size:0.98rem; font-weight:800;">📊 Evaluasi Biaya Perawatan Per Unit</h3>
+          <select id="evalPeriodSelect" onchange="renderSummaryDetailPage()" style="width:auto; height:36px; font-size:0.78rem;">
+            <option value="ALL">Semua Waktu</option>
+            <option value="1M">Bulan Ini</option>
+            <option value="3M">3 Bulan Terakhir</option>
+            <option value="6M">6 Bulan Terakhir</option>
+            <option value="12M">1 Tahun Terakhir</option>
+          </select>
+        </div>
+        <div id="evalUnitsContainer"></div>
+      </div>
+
+      <!-- Backup, Restore & Hold 3s Reset -->
+      <div class="detail-box">
+        <h3 style="font-size:0.92rem; font-weight:800; margin-bottom:10px;">⚙️ Manajemen Database & Reset</h3>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <button type="button" class="btn btn-sm btn-primary" onclick="syncAllDataToSheets()">☁️ Sync Semua ke Sheets</button>
+          <button class="btn btn-sm btn-outline" onclick="exportBackupJSON()">💾 Backup JSON</button>
+          <button class="btn btn-sm btn-outline" onclick="document.getElementById('importFileInput').click()">📂 Restore JSON</button>
+          <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importBackupJSON(event)">
+          <button type="button" class="btn btn-sm btn-hold-reset" id="btnResetHold"
+            onmousedown="startHoldReset()" onmouseup="cancelHoldReset()" onmouseleave="cancelHoldReset()"
+            ontouchstart="startHoldReset(event)" ontouchend="cancelHoldReset()" ontouchcancel="cancelHoldReset()">
+            <span class="hold-bar"></span>
+            <span class="hold-label" id="holdResetText">🗑️ Tahan 3 Detik: Reset ke 0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== HALAMAN DETAIL 1B: RINCIAN PER KONTRAKAN ==================== -->
+    <div id="viewHouseDetail" class="page-view">
+      <div class="subpage-topbar">
+        <button class="back-btn" onclick="goHome()"> Kembali</button>
+        <strong id="hdTopTitle" style="font-size: 0.95rem;">Detail Kontrakan</strong>
+        <button class="btn btn-sm btn-outline" id="hdEditBtn">⚙️ Atur</button>
+      </div>
+      <div id="houseDetailContent"></div>
+    </div>
+
+    <!-- ==================== HALAMAN 2: ALARM & JADWAL RUTIN ==================== -->
+    <div id="viewAlarm" class="page-view">
+      <div class="section-header" style="margin-top: 26px;">
+        <h2>⏰ Pengingat Jatuh Tempo & Rutin</h2>
+        <button class="btn btn-sm btn-orange" onclick="openCustomAlarmModal()">Tambahkan Pengingat</button>
+      </div>
+      <ul class="alarm-list" id="alarmList"></ul>
+    </div>
+
+    <!-- ==================== HALAMAN 3: MUTASI KEUANGAN ==================== -->
+    <div id="viewMutasi" class="page-view">
+      <div class="section-header" style="margin-top: 26px;">
+        <h2>🧾 Laporan Mutasi Keuangan</h2>
+      </div>
+
+      <div class="history-card">
+        <div class="filter-grid">
+          <div class="select-wrap"><select id="filterUnit" onchange="renderHistory()"></select></div>
+          <div class="select-wrap">
+            <select id="filterType" onchange="renderHistory()">
+              <option value="ALL">Semua Jenis (Masuk & Keluar)</option>
+              <option value="in">Pemasukan Saja (+)</option>
+              <option value="out">Pengeluaran Saja (-)</option>
+            </select>
+          </div>
+          <div class="select-wrap">
+            <select id="filterCategory" onchange="renderHistory()">
+              <option value="ALL">Semua Kategori</option>
+              <option value="DP">DP (Uang Muka)</option>
+              <option value="Angsuran">Angsuran / Cicilan</option>
+              <option value="Pelunasan">Pelunasan</option>
+              <option value="Jaminan">Uang Jaminan</option>
+              <option value="Pengeluaran Rutin">Pengeluaran Rutin</option>
+              <option value="Maintenance Rutin">Maintenance Rutin</option>
+              <option value="Maintenance Tidak Rutin">Maintenance Tidak Rutin</option>
+              <option value="Koreksi PIN">Koreksi Admin (PIN)</option>
+              <option value="Arsip Kontrak">Arsip Kontrak Selesai</option>
+            </select>
+          </div>
+          <div class="select-wrap"><select id="filterPeriod" onchange="renderHistory()"></select></div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Sumber / Unit</th>
+              <th>Kategori & Item</th>
+              <th>Keterangan</th>
+              <th class="col-num">Pemasukan (+)</th>
+              <th class="col-num">Pengeluaran (-)</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+          <tfoot>
+            <tr style="background: var(--bg-cream); font-weight: 800;">
+              <td colspan="4">TOTAL SESUAI FILTER</td>
+              <td class="col-num tag-in" id="mutasiSumIn">Rp 0</td>
+              <td class="col-num tag-out" id="mutasiSumOut">Rp 0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="navHomeBtn" onclick="switchMainTab('viewBeranda', this)">
+      <span class="ico">🏠</span>
+      <span>Beranda</span>
+    </button>
+    <button class="nav-btn" id="navAlarmBtn" onclick="switchMainTab('viewAlarm', this)">
+      <span class="ico">⏰</span>
+      <span>Alarm</span>
+    </button>
+    <button class="nav-btn" id="navMutasiBtn" onclick="switchMainTab('viewMutasi', this)">
+      <span class="ico">🧾</span>
+      <span>Mutasi</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODAL TAMBAH UNIT KONTRAKAN BARU ==================== -->
+  <div class="modal-overlay" id="addHouseModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>➕ Tambah Unit Kontrakan Baru</h3>
+        <button class="close-modal" onclick="closeModal('addHouseModal')">✕</button>
+      </div>
+      <form onsubmit="submitAddHouse(event)">
+        <div class="form-group">
+          <label>Nama Unit Kontrakan</label>
+          <input type="text" id="newHouseName" placeholder="Misal: Kontrakan 07 / Rumah Anggrek" required>
+        </div>
+        <div class="form-group">
+          <label>Harga Sewa Setahun (Rp) <span style="font-weight:500; color:var(--text-muted);">(Opsional, bisa diisi nanti)</span></label>
+          <input type="text" id="newHouseTargetVis" placeholder="Contoh: 100.000.000" oninput="formatInputDots(this, 'newHouseTarget')">
+          <input type="hidden" id="newHouseTarget" value="0">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">+ Simpan Unit Baru</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL PENGATURAN KONTRAKAN (ENTRY PENYEWA, DP, JAMINAN) ==================== -->
+  <div class="modal-overlay" id="editHouseModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="editModalTitle">⚙️ Pengaturan Kontrakan</h3>
+        <button class="close-modal" onclick="closeModal('editHouseModal')">✕</button>
+      </div>
+      <form onsubmit="submitEditHouse(event)">
+        <input type="hidden" id="editHouseId">
+
+        <div class="form-group">
+          <label>Nama Unit Kontrakan</label>
+          <input type="text" id="editHouseName" required>
+        </div>
+
+        <div class="form-group">
+          <label>Nama Penyewa (Kosongkan jika unit kosong)</label>
+          <input type="text" id="editTenant" placeholder="Misal: Bpk. Budi">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>No. WhatsApp (Awali 62)</label>
+            <input type="text" id="editPhone" placeholder="628123456789">
+          </div>
+          <div class="form-group">
+            <label>Email Penyewa (Opsional)</label>
+            <input type="email" id="editEmail" placeholder="penyewa@email.com">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Harga Sewa Setahun (Rp)</label>
+          <input type="text" id="editTargetDisplay" oninput="formatInputDots(this, 'editTarget'); autoCalcPerTerm();" required>
+          <input type="hidden" id="editTarget">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Skema Angsuran</label>
+            <div class="select-wrap">
+              <select id="editSchemeSelect" onchange="handleSchemeSelectChange()">
+                <option value="Per Bulan (12x)" data-count="12">Per Bulan (12x)</option>
+                <option value="Per 3 Bulan (4x)" data-count="4">Per 3 Bulan (4x)</option>
+                <option value="Per 4 Bulan (3x)" data-count="3">Per 4 Bulan (3x)</option>
+                <option value="Per 6 Bulan (2x)" data-count="2">Per 6 Bulan (2x)</option>
+                <option value="Lunas Tahunan (1x)" data-count="1">Lunas Tahunan (1x)</option>
+                <option value="Custom">DP + Cicilan (Custom)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Jumlah Bayar Cicilan (Kali)</label>
+            <input type="number" id="editInstallmentCount" min="1" max="60" value="4" oninput="autoCalcPerTerm(); autoSyncNextDueDate();" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" id="dpInputGroup">
+            <label>Nominal DP Awal (Rp)</label>
+            <input type="text" id="editDpDisplay" placeholder="0" oninput="formatInputDots(this, 'editDp'); autoCalcPerTerm();">
+            <input type="hidden" id="editDp" value="0">
+          </div>
+          <div class="form-group">
+            <label>Uang Jaminan Kerusakan (Rp)</label>
+            <input type="text" id="editDepositDisplay" placeholder="0" oninput="formatInputDots(this, 'editDeposit')">
+            <input type="hidden" id="editDeposit" value="0">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tagihan Per Bayar <span id="intervalBadgeText" style="font-weight: 700; color: var(--primary-green); font-size: 0.75rem;"></span></label>
+          <input type="text" id="editPerTermDisplay" oninput="formatInputDots(this, 'editPerTerm')" required>
+          <input type="hidden" id="editPerTerm">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tanggal Awal Kontrak</label>
+            <input type="date" id="editStart">
+          </div>
+          <div class="form-group">
+            <label>Tanggal Selesai Kontrak</label>
+            <input type="date" id="editEnd">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tanggal Terakhir Bayar / DP</label>
+            <input type="date" id="editLastPaid" onchange="autoSyncNextDueDate()">
+          </div>
+          <div class="form-group">
+            <label>Jatuh Tempo Berikutnya</label>
+            <input type="date" id="editNextDue">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Simpan Perubahan</button>
+
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1.5px dashed var(--border-soft); display:flex; flex-direction:column; gap:8px;">
+          <button type="button" class="btn btn-danger-soft" style="width: 100%;" onclick="vacateSingleUnit()">
+            🚪 Selesai Kontrak / Kosongkan Unit (Mutasi Tetap Aman)
+          </button>
+          <button type="button" class="btn btn-outline" style="width: 100%; color: var(--danger-red);" onclick="deleteSingleUnitPermanent()">
+            🗑️ Hapus Permanen Unit Kontrakan Ini
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL PEMASUKAN ==================== -->
+  <div class="modal-overlay" id="incomeModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>💸 Catat Pemasukan</h3>
+        <button class="close-modal" onclick="closeModal('incomeModal')">✕</button>
+      </div>
+      <form onsubmit="submitIncome(event)">
+        <div class="form-group">
+          <label>Dari Unit Kontrakan</label>
+          <div class="select-wrap"><select id="incHouseId" onchange="autoFillInstallmentSuggestion()" required></select></div>
+        </div>
+        <div class="form-group">
+          <label>Jenis Pemasukan</label>
+          <div class="select-wrap">
+            <select id="incType" onchange="autoFillInstallmentSuggestion()" required>
+              <option value="Angsuran">Angsuran / Cicilan Berkala</option>
+              <option value="DP">DP (Uang Muka Kontrak)</option>
+              <option value="Pelunasan">Pelunasan Set Point</option>
+              <option value="Jaminan">Uang Jaminan Kerusakan (Deposit)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nominal (Rp) <span id="incHintLabel" style="font-weight: 500; color: var(--primary-green); font-size: 0.75rem;"></span></label>
+          <input type="text" id="incAmountDisplay" placeholder="Contoh: 25.000.000" oninput="formatInputDots(this, 'incAmount')" required>
+          <input type="hidden" id="incAmount">
+        </div>
+        <div class="form-group">
+          <label>Tanggal Pembayaran</label>
+          <input type="date" id="incDate" required>
+        </div>
+        <div class="form-group">
+          <label>Catatan</label>
+          <input type="text" id="incNote" placeholder="Keterangan tambahan..." required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Simpan Pemasukan</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL PENGELUARAN ==================== -->
+  <div class="modal-overlay" id="expenseModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🛠️ Catat Pengeluaran</h3>
+        <button class="close-modal" onclick="closeModal('expenseModal')">✕</button>
+      </div>
+      <form onsubmit="submitExpense(event)">
+        <div class="form-group">
+          <label>Alokasi Pengeluaran</label>
+          <div class="select-wrap">
+            <select id="expMode" onchange="toggleExpenseHouseSelect()">
+              <option value="serempak">Pengeluaran Bersama</option>
+              <option value="per_rumah">Per Kontrakan</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" id="expHouseGroup" style="display: none;">
+          <label>Pilih Unit Kontrakan</label>
+          <div class="select-wrap"><select id="expHouseId"></select></div>
+        </div>
+        <div class="form-group">
+          <label>Kategori Pengeluaran</label>
+          <div class="select-wrap">
+            <select id="expCategory" onchange="renderSubCategoryDropdown()" required>
+              <option value="Pengeluaran Rutin">Pengeluaran Rutin</option>
+              <option value="Maintenance Rutin">Maintenance Rutin</option>
+              <option value="Maintenance Tidak Rutin">Maintenance Tidak Rutin</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Detail Item</label>
+          <div class="select-wrap"><select id="expSubItem" required></select></div>
+          <div style="display:flex; gap:6px; margin-top:7px;">
+            <input type="text" id="newSubItemInput" placeholder="Tambah item baru..." style="height:36px; font-size:0.8rem;">
+            <button type="button" class="btn btn-sm btn-primary" onclick="addSubItem()">+ Tambah</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Total Nominal Keluar (Rp)</label>
+          <input type="text" id="expAmountDisplay" placeholder="Contoh: 500.000" oninput="formatInputDots(this, 'expAmount')" required>
+          <input type="hidden" id="expAmount">
+        </div>
+        <div class="form-group">
+          <label>Tanggal Pengeluaran</label>
+          <input type="date" id="expDate" required>
+        </div>
+        <div class="form-group">
+          <label>Keterangan</label>
+          <input type="text" id="expNote" placeholder="Keterangan pengeluaran..." required>
+        </div>
+        <button type="submit" class="btn btn-orange" style="width: 100%;">Simpan Pengeluaran</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL KELOLA PENGINGAT RUTIN ==================== -->
+  <div class="modal-overlay" id="customAlarmModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>⏰ Atur Pengingat Rutin Bulanan</h3>
+        <button class="close-modal" onclick="closeModal('customAlarmModal')">✕</button>
+      </div>
+      <form onsubmit="addCustomAlarm(event)">
+        <div class="form-group">
+          <label>Nama Tagihan / Pengingat Rutin</label>
+          <input type="text" id="caTitle" placeholder="Misal: Tukang Kebun / WiFi / Sampah" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Jatuh Tempo Tiap Tanggal</label>
+            <input type="number" id="caDay" min="1" max="31" value="5" required>
+          </div>
+          <div class="form-group">
+            <label>Munculkan Alarm Mulai</label>
+            <div class="select-wrap">
+              <select id="caLeadDays">
+                <option value="7" selected>H-7 (Seminggu Sebelumnya)</option>
+                <option value="5">H-5</option>
+                <option value="3">H-3</option>
+                <option value="1">H-1</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nominal Estimasi (Rp)</label>
+            <input type="text" id="caNominalVis" inputmode="numeric" placeholder="0" oninput="formatInputDots(this, 'caNominalReal')">
+            <input type="hidden" id="caNominalReal" value="0">
+          </div>
+          <div class="form-group">
+            <label>Catatan</label>
+            <input type="text" id="caNote" placeholder="Opsional">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">+ Simpan Jadwal Rutin</button>
+      </form>
+      <div style="margin-top: 16px; border-top: 1.5px dashed var(--border-soft); padding-top: 12px;">
+        <div style="font-size: 0.82rem; font-weight: 800; margin-bottom: 6px;">Daftar Pengingat Rutin Aktif:</div>
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:7px;" id="customAlarmManageList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL PIN & KOREKSI ==================== -->
+  <div class="modal-overlay" id="pinModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🔐 PIN & Koreksi Angka</h3>
+        <button class="close-modal" onclick="closeModal('pinModal')">✕</button>
+      </div>
+      <div id="pinVerifyStep">
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">Masukkan PIN Keamanan (Bawaan awal: <strong>1234</strong>)</p>
+        <form onsubmit="verifyPinSubmit(event)">
+          <div class="form-group" style="position:relative;">
+            <input type="password" id="pinInputCheck" inputmode="numeric" maxlength="6" placeholder="••••" style="text-align:center; font-size:1.2rem; letter-spacing:6px; padding-right:44px;" required>
+            <button type="button" onclick="togglePinEye('pinInputCheck', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem;" title="Lihat / Sembunyikan PIN">👁️</button>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;">🔓 Buka Kunci</button>
+        </form>
+      </div>
+      <div id="pinUnlockedStep" style="display:none;">
+        <div style="display:flex; gap:6px; margin-bottom:14px;">
+          <button type="button" id="btnTabKoreksi" class="btn btn-sm btn-primary" style="flex:1;" onclick="switchPinTab('koreksi')">✏️ Koreksi Angka</button>
+          <button type="button" id="btnTabSetPin" class="btn btn-sm btn-outline" style="flex:1;" onclick="switchPinTab('setpin')">🔑 Ubah PIN</button>
+        </div>
+        <div id="pinTabKoreksi">
+          <form onsubmit="submitCorrection(event)">
+            <div class="form-group">
+              <label>Pilih Sasaran Koreksi</label>
+              <div class="select-wrap"><select id="corrHouseSelect" onchange="loadCorrectionValues()"></select></div>
+            </div>
+            <div id="corrUnitFields">
+              <div class="form-group"><label>Total Terbayar Unit (Rp)</label><input type="text" id="corrPaidVis" oninput="formatInputDots(this, 'corrPaid')"><input type="hidden" id="corrPaid"></div>
+              <div class="form-group"><label>Total Biaya Keluar Unit (Rp)</label><input type="text" id="corrExpVis" oninput="formatInputDots(this, 'corrExp')"><input type="hidden" id="corrExp"></div>
+              <div class="form-group"><label>Uang Jaminan Unit (Rp)</label><input type="text" id="corrDepVis" oninput="formatInputDots(this, 'corrDep')"><input type="hidden" id="corrDep"></div>
+            </div>
+            <div id="corrSharedFields" style="display:none;">
+              <div class="form-group"><label>Total Biaya Bersama Komplek (Rp)</label><input type="text" id="corrSharedExpVis" oninput="formatInputDots(this, 'corrSharedExp')"><input type="hidden" id="corrSharedExp"></div>
+            </div>
+            <div id="corrNetSaldoFields" style="display:none;">
+              <div class="form-group">
+                <label>Nominal Saldo Bersih Baru (Rp)</label>
+                <input type="text" id="corrNetSaldoVis" oninput="formatInputDots(this, 'corrNetSaldo')">
+                <input type="hidden" id="corrNetSaldo">
+              </div>
+              <p style="font-size:0.74rem; color:var(--text-muted); margin-top:-6px; margin-bottom:10px;">
+                Selisih penyesuaian akan otomatis tercatat di Mutasi sebagai <strong>"Penyesuaian Saldo"</strong>.
+              </p>
+            </div>
+            <div class="form-group">
+              <label>Tanggal Koreksi</label>
+              <input type="date" id="corrDate" required>
+            </div>
+            <div class="form-group"><label>Alasan Koreksi</label><input type="text" id="corrReason" placeholder="Misal: Salah ketik nominal / penyesuaian kas" required></div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Simpan Koreksi</button>
+          </form>
+        </div>
+        <div id="pinTabSetPin" style="display:none;">
+          <form onsubmit="submitChangePin(event)">
+            <div class="form-group">
+              <label>PIN Baru (4–6 Angka)</label>
+              <div style="position:relative;">
+                <input type="password" id="newPinInput" inputmode="numeric" maxlength="6" placeholder="Masukkan PIN baru" style="padding-right:44px;" required>
+                <button type="button" onclick="togglePinEye('newPinInput', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem;">👁️</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Ulangi PIN Baru</label>
+              <div style="position:relative;">
+                <input type="password" id="confirmPinInput" inputmode="numeric" maxlength="6" placeholder="Ketik ulang PIN baru" style="padding-right:44px;" required>
+                <button type="button" onclick="togglePinEye('confirmPinInput', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem;">👁️</button>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Simpan PIN Baru</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GOOGLE_SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzyj1So4Lh7R83UOK5VW4tbQI8XLru9T1tr7wM20WNSCsmTM6zctZ3WORrClxd6ORXg/exec";
+
+    const defaultSubCategories = {
+      "Pengeluaran Rutin": ["WiFi Bersama Komplek", "Tukang Sampah Komplek", "Tukang Kebun", "Keamanan / Ronda", "Listrik", "Air / PAM", "Pajak PBB"],
+      "Maintenance Rutin": ["Servis AC", "Kuras Toren Air", "Bersih Taman & Selokan"],
+      "Maintenance Tidak Rutin": ["Tukang (Atap Bocor)", "Perbaikan Keran / Pipa", "Cat Ulang Dinding", "Perbaikan Kunci / Pintu"]
+    };
+
+    const defaultHouses = [];
+
+    let houses = JSON.parse(localStorage.getItem('om_v11_houses')) || JSON.parse(JSON.stringify(defaultHouses));
+    let sharedExpenseTotal = localStorage.getItem('om_v11_shared_exp') !== null ? parseInt(localStorage.getItem('om_v11_shared_exp'), 10) : 0;
+    let history = JSON.parse(localStorage.getItem('om_v11_history')) || [];
+    let subCategories = JSON.parse(localStorage.getItem('om_v11_subcats')) || JSON.parse(JSON.stringify(defaultSubCategories));
+    let customAlarms = JSON.parse(localStorage.getItem('om_v11_custom_alarms')) || [];
+    let currentTheme = localStorage.getItem('om_v11_theme') || 'light';
+    let securityPin = localStorage.getItem('om_v11_pin') || '1234';
+    let activeDetailHouseId = null;
+
+    function saveData() {
+      localStorage.setItem('om_v11_houses', JSON.stringify(houses));
+      localStorage.setItem('om_v11_shared_exp', String(sharedExpenseTotal));
+      localStorage.setItem('om_v11_history', JSON.stringify(history));
+      localStorage.setItem('om_v11_subcats', JSON.stringify(subCategories));
+      localStorage.setItem('om_v11_custom_alarms', JSON.stringify(customAlarms));
+    }
+
+    function syncToGoogleSheets(transactionObj = null) {
+      if (!GOOGLE_SHEET_WEBHOOK_URL) return;
+      fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          transaction: transactionObj,
+          houses: houses,
+          sharedExpenseTotal: sharedExpenseTotal,
+          alarms: getActiveAlarmsForSync()
+        })
+      }).catch(err => console.warn("Sync Sheets gagal:", err));
+    }
+
+    function syncAllDataToSheets() {
+      if (!GOOGLE_SHEET_WEBHOOK_URL) {
+        alert("Link Google Sheets belum diisi di kode!");
+        return;
+      }
+      if (!confirm(`Kirim ulang seluruh data di HP (${houses.length} unit & ${history.length} riwayat mutasi) ke Google Sheets sekarang?`)) return;
+
+      // Urutkan mutasi dari TERBARU ke TERLAMA agar baris paling atas di Sheets selalu yang terbaru
+      const newestFirstHistory = [...history].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+      fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({
+          action: "FULL_SYNC",
+          transaction: null,
+          allHistory: newestFirstHistory,
+          houses: houses,
+          sharedExpenseTotal: sharedExpenseTotal,
+          alarms: getActiveAlarmsForSync()
+        })
+      })
+      .then(() => {
+        alert("✅ Berhasil! Seluruh data unit & riwayat mutasi di HP sudah dikirim ke Google Sheets (urut terbaru di atas).");
+      })
+      .catch(err => {
+        alert("⚠️ Gagal terhubung ke Google Sheets. Pastikan koneksi internet aktif.");
+        console.warn(err);
+      });
+    }
+
+    // Formatters & Helpers
+    function formatRupiah(num) {
+      const val = Math.round(num || 0);
+      const formatted = new Intl.NumberFormat('id-ID').format(Math.abs(val));
+      return val < 0 ? `-Rp ${formatted}` : `Rp ${formatted}`;
+    }
+
+    function formatDots(num) {
+      if (!num && num !== 0) return '';
+      return new Intl.NumberFormat('id-ID').format(Math.round(num));
+    }
+
+    function formatInputDots(visInput, hiddenId) {
+      const raw = visInput.value.replace(/[^0-9]/g, '');
+      document.getElementById(hiddenId).value = raw;
+      visInput.value = raw ? formatDots(parseInt(raw, 10)) : '';
+    }
+
+    function formatDateIndo(dateStr) {
+      if (!dateStr) return "-";
+      return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function getDaysDiff(targetDateStr) {
+      if (!targetDateStr) return null;
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const target = new Date(targetDateStr); target.setHours(0, 0, 0, 0);
+      return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+    }
+
+    function getNextMonthlyOccurrenceInfo(dayOfMonth) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const y = today.getFullYear(), m = today.getMonth();
+      const maxDayThisMonth = new Date(y, m + 1, 0).getDate();
+      let candidate = new Date(y, m, Math.min(dayOfMonth, maxDayThisMonth));
+      candidate.setHours(0, 0, 0, 0);
+
+      if (Math.ceil((candidate - today) / (1000 * 60 * 60 * 24)) < -2) {
+        const maxDayNextMonth = new Date(y, m + 2, 0).getDate();
+        candidate = new Date(y, m + 1, Math.min(dayOfMonth, maxDayNextMonth));
+        candidate.setHours(0, 0, 0, 0);
+      }
+      const diffDays = Math.ceil((candidate - today) / (1000 * 60 * 60 * 24));
+      const dateStr = candidate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      const cycleKey = `${candidate.getFullYear()}-${String(candidate.getMonth() + 1).padStart(2, '0')}`;
+      return { diffDays, dateStr, cycleKey };
+    }
+
+    function addMonthsToDateStr(dateStr, monthsToAdd) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-').map(Number);
+      if (parts.length !== 3) return '';
+      const targetMonthTotal = (parts[1] - 1) + monthsToAdd;
+      const targetYear = parts[0] + Math.floor(targetMonthTotal / 12);
+      const targetMonth = ((targetMonthTotal % 12) + 12) % 12;
+      const safeDay = Math.min(parts[2], new Date(targetYear, targetMonth + 1, 0).getDate());
+      return `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}-${String(safeDay).padStart(2, '0')}`;
+    }
+
+    function getSchemeIntervalMonths(installmentCount) {
+      const cnt = Math.max(1, parseInt(installmentCount, 10) || 1);
+      return Math.max(1, Math.round(12 / cnt));
+    }
+
+    function getInstallmentInfo(h) {
+      const totalCount = Math.max(1, parseInt(h.installmentCount, 10) || 1);
+      const dpVal = Math.max(0, parseInt(h.dpAmount, 10) || 0);
+      const remainingAfterDp = Math.max(0, h.targetPrice - dpVal);
+      const perTerm = h.perTermAmount && h.perTermAmount > 0 ? h.perTermAmount : Math.round(remainingAfterDp / totalCount);
+      const sisaTarget = Math.max(0, h.targetPrice - h.paidAmount);
+      const intervalMonths = getSchemeIntervalMonths(totalCount);
+
+      if (sisaTarget === 0) {
+        return { totalCount, dpVal, perTerm, intervalMonths, sisaTarget: 0, paidTerms: totalCount, nextTermNumber: totalCount, remainingTermsCount: 0, currentDueNominal: 0 };
+      }
+
+      const paidInstallmentsNominal = Math.max(0, h.paidAmount - dpVal);
+      const paidTerms = perTerm > 0 ? Math.min(totalCount - 1, Math.floor(paidInstallmentsNominal / perTerm)) : 0;
+      const nextTermNumber = paidTerms + 1;
+      const remainingTermsCount = perTerm > 0 ? Math.max(1, Math.ceil(sisaTarget / perTerm)) : 1;
+      const currentDueNominal = Math.min(sisaTarget, perTerm);
+
+      return { totalCount, dpVal, perTerm, intervalMonths, sisaTarget, paidTerms, nextTermNumber, remainingTermsCount, currentDueNominal };
+    }
+
+    // ==================== NAVIGATION & VIEWS ====================
+    function applyTheme() {
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      document.getElementById('themeBtn').textContent = currentTheme === 'dark' ? '☀️' : '🌓';
+    }
+
+    function toggleTheme() {
+      currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+      localStorage.setItem('om_v11_theme', currentTheme);
+      applyTheme();
+    }
+
+    function showPage(pageId) {
+      document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchMainTab(viewId, btn) {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      showPage(viewId);
+    }
+
+    function goHome() {
+      activeDetailHouseId = null;
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('navHomeBtn').classList.add('active');
+      showPage('viewBeranda');
+    }
+
+    function openAlarmTab() {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('navAlarmBtn').classList.add('active');
+      showPage('viewAlarm');
+    }
+
+    function openSummaryDetailView() {
+      renderSummaryDetailPage();
+      showPage('viewSummaryDetail');
+    }
+
+    function openHouseDetailView(houseId) {
+      activeDetailHouseId = houseId;
+      renderHouseDetailPage(houseId);
+      showPage('viewHouseDetail');
+    }
+
+    // ==================== RENDER UTAMA (DASHBOARD RINGKAS) ====================
+    function renderApp() {
+      let totalIn = 0, totalUnitExp = 0, totalDeposit = 0, totalPiutang = 0;
+
+      houses.forEach(h => {
+        totalIn += h.paidAmount;
+        totalUnitExp += h.expenseAmount;
+        totalDeposit += h.depositAmount;
+        if (h.tenant && h.targetPrice > h.paidAmount) {
+          totalPiutang += (h.targetPrice - h.paidAmount);
+        }
+      });
+
+      const totalOut = totalUnitExp + sharedExpenseTotal;
+      const netSaldo = totalIn - totalOut;
+
+      // Update Executive Summary Card (Home) — Jaminan terpisah dari Saldo Bersih
+      document.getElementById('execSaldoBersih').textContent = formatRupiah(netSaldo);
+      document.getElementById('execCashIn').textContent = formatRupiah(totalIn);
+      document.getElementById('execCashOut').textContent = formatRupiah(totalOut);
+      document.getElementById('execJaminan').textContent = formatRupiah(totalDeposit);
+
+      // Update Detail Summary Numbers
+      document.getElementById('detSaldoBersih').textContent = formatRupiah(netSaldo);
+      document.getElementById('detTotalJaminan').textContent = formatRupiah(totalDeposit);
+      document.getElementById('detCashIn').textContent = formatRupiah(totalIn);
+      document.getElementById('detCashOut').textContent = formatRupiah(totalOut);
+      document.getElementById('detPiutang').textContent = formatRupiah(totalPiutang);
+      document.getElementById('detSharedExp').textContent = formatRupiah(sharedExpenseTotal);
+
+      renderCompactHouses();
+      renderAlarms();
+      populateMutasiFilters();
+      renderHistory();
+
+      if (activeDetailHouseId) {
+        renderHouseDetailPage(activeDetailHouseId);
+      }
+    }
+
+    // Kartu Kontrakan Ringkas di Beranda (Master List)
+    function renderCompactHouses() {
+      const grid = document.getElementById('compactHousesGrid');
+      grid.innerHTML = '';
+      document.getElementById('unitCountHeader').textContent = `Daftar Unit Kontrakan (${houses.length} Unit)`;
+
+      if (houses.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; background: var(--card-white); border: 1.5px dashed var(--border-soft); border-radius: var(--radius-md); padding: 28px 20px; text-align: center; color: var(--text-muted);">
+            <div style="font-size: 1.8rem; margin-bottom: 6px;">🏘️</div>
+            <strong style="display: block; color: var(--text-dark); font-size: 0.95rem; margin-bottom: 4px;">Belum Ada Unit Kontrakan</strong>
+            <span style="font-size: 0.8rem;">Ketuk tombol <strong>"+"</strong> untuk tambah kontrakan</span>
+          </div>
+        `;
+        return;
+      }
+
+      houses.forEach(h => {
+        const isVacant = !h.tenant;
+        const info = getInstallmentInfo(h);
+        const percent = h.targetPrice > 0 ? Math.min(100, Math.round((h.paidAmount / h.targetPrice) * 100)) : 0;
+
+        let statusClass = 'status-cicil', pillClass = 'pill-cicil', statusText = `Sisa ${formatRupiah(info.sisaTarget)}`;
+        if (isVacant) {
+          statusClass = 'status-kosong'; pillClass = 'pill-kosong'; statusText = 'Kosong';
+        } else if (info.sisaTarget === 0) {
+          statusClass = 'status-lunas'; pillClass = 'pill-lunas'; statusText = 'Lunas 100%';
+        }
+
+        const card = document.createElement('div');
+        card.className = `compact-house-card ${statusClass}`;
+        card.onclick = () => openHouseDetailView(h.id);
+        card.innerHTML = `
+          <div class="ch-top">
+            <div>
+              <div class="ch-title">${h.name}</div>
+              <div class="ch-tenant">${isVacant ? 'Belum ada penyewa' : h.tenant}</div>
+            </div>
+            <span class="status-pill ${pillClass}">${statusText}</span>
+          </div>
+          <div class="ch-progress-wrap">
+            <div class="ch-progress-meta">
+              <span>${formatRupiah(h.paidAmount)} / ${formatRupiah(h.targetPrice)}</span>
+              <span>${percent}%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width:${percent}%; background:${percent === 100 ? 'var(--primary-green)' : 'var(--accent-orange)'};"></div>
+            </div>
+          </div>
+          <div class="ch-footer">
+            <span>${isVacant ? 'Klik untuk atur penyewa' : (info.sisaTarget === 0 ? `Akhir kontrak: ${formatDateIndo(h.endDate)}` : `Jatuh tempo: ${formatDateIndo(h.nextDueDate)}`)}</span>
+            <strong>Rincian </strong>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // ==================== DETAIL PAGE: RINCIAN PER KONTRAKAN ====================
+    function renderHouseDetailPage(houseId) {
+      const h = houses.find(x => x.id === houseId);
+      if (!h) return goHome();
+
+      const isVacant = !h.tenant;
+      const info = getInstallmentInfo(h);
+      const percent = h.targetPrice > 0 ? Math.min(100, Math.round((h.paidAmount / h.targetPrice) * 100)) : 0;
+      const netUnit = h.paidAmount - h.expenseAmount;
+
+      document.getElementById('hdTopTitle').textContent = h.name;
+      document.getElementById('hdEditBtn').onclick = () => openEditHouseModal(h.id);
+
+      const unitExpenses = history.filter(item => item.type === 'out' && item.houseId === h.id);
+      const expListHtml = unitExpenses.length > 0
+        ? unitExpenses.map(ex => `
+            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--border-soft); font-size:0.82rem;">
+              <div>
+                <strong>${ex.subItem || ex.category}</strong>
+                <div style="font-size:0.74rem; color:var(--text-muted);">${formatDateIndo(ex.date)} • ${ex.note}</div>
+              </div>
+              <strong style="color:var(--danger-red);">${formatRupiah(ex.amount)}</strong>
+            </div>
+          `).join('')
+        : `<p style="font-size:0.8rem; color:var(--text-muted); font-style:italic;">Belum ada riwayat biaya perawatan spesifik pada unit ini.</p>`;
+
+      const waMsg = isVacant ? '' : (info.sisaTarget === 0
+        ? `Halo ${h.tenant}, terima kasih pembayaran ${h.name} sebesar ${formatRupiah(h.targetPrice)} sudah lunas 100%.`
+        : `Halo ${h.tenant}, pengingat pembayaran ${h.name} Angsuran ke-${info.nextTermNumber}/${info.totalCount} sebesar ${formatRupiah(info.currentDueNominal)} jatuh tempo ${formatDateIndo(h.nextDueDate)}. Total sisa: ${formatRupiah(info.sisaTarget)}.`);
+
+      document.getElementById('houseDetailContent').innerHTML = `
+        <div class="detail-box">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+            <div>
+              <h2 style="font-size:1.25rem; font-weight:800;">${h.name}</h2>
+              <p style="font-size:0.88rem; color:var(--text-muted); font-weight:600;">${isVacant ? 'Status: Kosong (Siap Disewakan)' : `Penyewa: ${h.tenant}`}</p>
+              ${!isVacant ? `<p style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">📱 ${h.phone || '-'} &nbsp;•&nbsp; ✉️ ${h.email || '-'}</p>` : ''}
+            </div>
+            <span class="status-pill ${isVacant ? 'pill-kosong' : (info.sisaTarget === 0 ? 'pill-lunas' : 'pill-cicil')}">
+              ${isVacant ? 'Kosong' : (info.sisaTarget === 0 ? 'Lunas 100%' : `Sisa ${info.remainingTermsCount}x`)}
+            </span>
+          </div>
+
+          <div style="background:var(--bg-cream); padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--border-soft); margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:800; margin-bottom:6px;">
+              <span>Progress Set Point (${percent}%)</span>
+              <span>${formatRupiah(h.paidAmount)} / ${formatRupiah(h.targetPrice)}</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width:${percent}%; background:${percent === 100 ? 'var(--primary-green)' : 'var(--accent-orange)'};"></div>
+            </div>
+          </div>
+
+          <div class="detail-grid-2">
+            <div class="info-tile">
+              <span>Sisa Piutang / Tagihan</span>
+              <strong style="color:var(--accent-orange);">${formatRupiah(info.sisaTarget)}</strong>
+            </div>
+            <div class="info-tile">
+              <span>Uang Jaminan Kerusakan</span>
+              <strong>${formatRupiah(h.depositAmount)}</strong>
+            </div>
+            <div class="info-tile">
+              <span>Skema & Nominal Cicilan</span>
+              <strong>${info.dpVal > 0 ? `DP ${formatRupiah(info.dpVal)} • ` : ''}${info.totalCount}x (${formatRupiah(info.perTerm)})</strong>
+            </div>
+            <div class="info-tile">
+              <span>${info.sisaTarget === 0 ? 'Akhir Kontrak' : 'Jatuh Tempo Berikutnya'}</span>
+              <strong>${info.sisaTarget === 0 ? formatDateIndo(h.endDate) : formatDateIndo(h.nextDueDate)}</strong>
+            </div>
+            <div class="info-tile">
+              <span>Periode Kontrak</span>
+              <strong>${isVacant ? '-' : `${formatDateIndo(h.startDate)} s/d ${formatDateIndo(h.endDate)}`}</strong>
+            </div>
+            <div class="info-tile">
+              <span>Kontribusi Bersih Unit</span>
+              <strong style="color:${netUnit < 0 ? 'var(--danger-red)' : 'var(--primary-green)'};">${formatRupiah(netUnit)}</strong>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+            <button class="btn btn-primary" onclick="openIncomeModal(${h.id})">+ Catat Bayar</button>
+            ${!isVacant && h.phone
+              ? `<a href="https://wa.me/${h.phone}?text=${encodeURIComponent(waMsg)}" target="_blank" class="btn btn-wa">Tagih via WA 💬</a>`
+              : `<button class="btn btn-outline" disabled>No. WA Kosong</button>`
+            }
+          </div>
+        </div>
+
+        <div class="detail-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="font-size:0.95rem; font-weight:800;">🛠️ Riwayat Biaya Perawatan Unit Ini</h3>
+            <strong style="color:var(--danger-red); font-size:0.9rem;">Total: ${formatRupiah(h.expenseAmount)}</strong>
+          </div>
+          ${expListHtml}
+        </div>
+      `;
+    }
+
+    // ==================== DETAIL PAGE: EVALUASI SUMMARY ====================
+    function renderSummaryDetailPage() {
+      const period = document.getElementById('evalPeriodSelect').value;
+      const container = document.getElementById('evalUnitsContainer');
+      container.innerHTML = '';
+
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const filteredExp = history.filter(item => {
+        if (item.type !== 'out') return false;
+        if (period === 'ALL') return true;
+        const d = new Date(item.date); d.setHours(0, 0, 0, 0);
+        if (period === '1M') return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+        const cutoff = new Date(today);
+        cutoff.setMonth(cutoff.getMonth() - ({ '3M': 3, '6M': 6, '12M': 12 }[period]));
+        return d >= cutoff;
+      });
+
+      const stats = houses.map(h => {
+        let cost = period === 'ALL' ? h.expenseAmount : 0;
+        if (period !== 'ALL') {
+          filteredExp.forEach(e => { if (e.houseId === h.id) cost += e.amount; });
+        }
+        return { h, cost, net: h.paidAmount - cost };
+      }).sort((a, b) => b.cost - a.cost);
+
+      stats.forEach((st, idx) => {
+        const badge = idx === 0 && st.cost > 0 ? '🔥 Biaya Terbesar' : (idx === stats.length - 1 ? '🌿 Paling Hemat' : `#${idx + 1}`);
+        const div = document.createElement('div');
+        div.style.cssText = "background:var(--mini-box-bg); border:1px solid var(--border-soft); border-radius:12px; padding:12px 14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;";
+        div.innerHTML = `
+          <div>
+            <strong>${st.h.name}</strong> <span style="font-size:0.72rem; color:var(--text-muted);">(${badge})</span>
+            <div style="font-size:0.76rem; color:var(--text-muted);">Masuk: ${formatRupiah(st.h.paidAmount)} • Net: ${formatRupiah(st.net)}</div>
+          </div>
+          <strong style="color:var(--danger-red); font-size:0.95rem;">${formatRupiah(st.cost)}</strong>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // ==================== TAMBAH & ATUR UNIT KONTRAKAN ====================
+    function openAddHouseModal() {
+      document.getElementById('newHouseName').value = `Kontrakan 0${houses.length + 1}`;
+      document.getElementById('newHouseTargetVis').value = '';
+      document.getElementById('newHouseTarget').value = '0';
+      document.getElementById('addHouseModal').classList.add('open');
+    }
+
+    function submitAddHouse(e) {
+      e.preventDefault();
+      const name = document.getElementById('newHouseName').value.trim();
+      const target = parseInt(document.getElementById('newHouseTarget').value, 10) || 0;
+      if (!name) return;
+
+      const nextId = houses.length > 0 ? Math.max(...houses.map(h => h.id)) + 1 : 1;
+      houses.push({
+        id: nextId,
+        name: name,
+        tenant: "",
+        phone: "",
+        email: "",
+        targetPrice: target,
+        dpAmount: 0,
+        paidAmount: 0,
+        depositAmount: 0,
+        expenseAmount: 0,
+        scheme: "Per Bulan (12x)",
+        installmentCount: 12,
+        perTermAmount: Math.round(target / 12),
+        startDate: "",
+        endDate: "",
+        nextDueDate: "",
+        lastPaidDate: ""
+      });
+
+      saveData();
+      syncToGoogleSheets(null);
+      renderApp();
+      closeModal('addHouseModal');
+    }
+
+    function openEditHouseModal(houseId) {
+      const h = houses.find(x => x.id === houseId);
+      if (!h) return;
+      document.getElementById('editModalTitle').textContent = `⚙️ Pengaturan ${h.name}`;
+      document.getElementById('editHouseId').value = h.id;
+      document.getElementById('editHouseName').value = h.name;
+      document.getElementById('editTenant').value = h.tenant;
+      document.getElementById('editPhone').value = h.phone;
+      document.getElementById('editEmail').value = h.email || '';
+
+      document.getElementById('editTarget').value = h.targetPrice;
+      document.getElementById('editTargetDisplay').value = formatDots(h.targetPrice);
+
+      const schemeSel = document.getElementById('editSchemeSelect');
+      const isPreset = [...schemeSel.options].some(o => o.value === h.scheme && o.value !== 'Custom');
+      schemeSel.value = isPreset ? h.scheme : 'Custom';
+
+      const countVal = h.installmentCount || 4;
+      document.getElementById('editInstallmentCount').value = countVal;
+
+      const dpVal = h.dpAmount || 0;
+      document.getElementById('editDp').value = dpVal;
+      document.getElementById('editDpDisplay').value = dpVal > 0 ? formatDots(dpVal) : '';
+
+      const depVal = h.depositAmount || 0;
+      document.getElementById('editDeposit').value = depVal;
+      document.getElementById('editDepositDisplay').value = depVal > 0 ? formatDots(depVal) : '';
+
+      const sisaSetelahDp = Math.max(0, h.targetPrice - dpVal);
+      const perTerm = h.perTermAmount || Math.round(sisaSetelahDp / countVal);
+      document.getElementById('editPerTerm').value = perTerm;
+      document.getElementById('editPerTermDisplay').value = formatDots(perTerm);
+
+      updateIntervalBadgeLabel();
+      document.getElementById('editStart').value = h.startDate;
+      document.getElementById('editEnd').value = h.endDate;
+      document.getElementById('editLastPaid').value = h.lastPaidDate || '';
+      document.getElementById('editNextDue').value = h.nextDueDate || '';
+      document.getElementById('editHouseModal').classList.add('open');
+    }
+
+    function updateIntervalBadgeLabel() {
+      const cnt = Math.max(1, parseInt(document.getElementById('editInstallmentCount').value, 10) || 1);
+      document.getElementById('intervalBadgeText').textContent = `(Per ${getSchemeIntervalMonths(cnt)} bulan)`;
+    }
+
+    function autoSyncNextDueDate() {
+      const lastPaidVal = document.getElementById('editLastPaid').value;
+      const cntVal = Math.max(1, parseInt(document.getElementById('editInstallmentCount').value, 10) || 1);
+      updateIntervalBadgeLabel();
+      if (!lastPaidVal) return;
+      const nextDue = addMonthsToDateStr(lastPaidVal, getSchemeIntervalMonths(cntVal));
+      if (nextDue) document.getElementById('editNextDue').value = nextDue;
+    }
+
+    function handleSchemeSelectChange() {
+      const sel = document.getElementById('editSchemeSelect');
+      const defaultCnt = sel.options[sel.selectedIndex].getAttribute('data-count');
+      if (defaultCnt && sel.value !== 'Custom') {
+        document.getElementById('editInstallmentCount').value = defaultCnt;
+      }
+      autoCalcPerTerm();
+      autoSyncNextDueDate();
+    }
+
+    function autoCalcPerTerm() {
+      const target = parseInt(document.getElementById('editTarget').value, 10) || 0;
+      const dp = parseInt(document.getElementById('editDp').value, 10) || 0;
+      const cnt = Math.max(1, parseInt(document.getElementById('editInstallmentCount').value, 10) || 1);
+      const perTerm = Math.round(Math.max(0, target - dp) / cnt);
+      document.getElementById('editPerTerm').value = perTerm;
+      document.getElementById('editPerTermDisplay').value = formatDots(perTerm);
+      updateIntervalBadgeLabel();
+    }
+
+    function submitEditHouse(e) {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('editHouseId').value, 10);
+      const h = houses.find(x => x.id === id);
+
+      h.name = document.getElementById('editHouseName').value.trim() || h.name;
+      h.tenant = document.getElementById('editTenant').value.trim();
+      h.phone = document.getElementById('editPhone').value.trim();
+      h.email = document.getElementById('editEmail').value.trim();
+      h.targetPrice = parseInt(document.getElementById('editTarget').value, 10) || 0;
+
+      const dpBaru = parseInt(document.getElementById('editDp').value, 10) || 0;
+      h.dpAmount = dpBaru;
+
+      const depLama = h.depositAmount || 0;
+      const depBaru = parseInt(document.getElementById('editDeposit').value, 10) || 0;
+      h.depositAmount = depBaru;
+
+      h.installmentCount = Math.max(1, parseInt(document.getElementById('editInstallmentCount').value, 10) || 1);
+      const sisaSetelahDp = Math.max(0, h.targetPrice - dpBaru);
+      h.perTermAmount = parseInt(document.getElementById('editPerTerm').value, 10) || Math.round(sisaSetelahDp / h.installmentCount);
+
+      const selScheme = document.getElementById('editSchemeSelect');
+      const intervalBln = getSchemeIntervalMonths(h.installmentCount);
+      h.scheme = selScheme.value === 'Custom'
+        ? (dpBaru > 0 ? `DP + ${h.installmentCount}x (Per ${intervalBln} Bln)` : `${h.installmentCount}x (Per ${intervalBln} Bln)`)
+        : selScheme.value;
+
+      h.startDate = document.getElementById('editStart').value;
+      h.endDate = document.getElementById('editEnd').value;
+      h.lastPaidDate = document.getElementById('editLastPaid').value;
+      h.nextDueDate = document.getElementById('editNextDue').value;
+      if (h.targetPrice > 0 && (dpBaru >= h.targetPrice || h.paidAmount >= h.targetPrice)) {
+        h.nextDueDate = '';
+      }
+
+      const payDate = h.lastPaidDate || h.startDate || new Date().toISOString().split('T')[0];
+      const newTransactions = [];
+
+      if (dpBaru > 0 && h.paidAmount === 0) {
+        h.paidAmount = dpBaru;
+        h.lastPaidDate = payDate;
+        if (!h.nextDueDate && h.paidAmount < h.targetPrice) {
+          h.nextDueDate = addMonthsToDateStr(payDate, intervalBln);
+        }
+        const dpTr = {
+          date: payDate, houseId: h.id, unit: h.name, category: "DP", subItem: "DP Awal Kontrak",
+          note: `DP awal (Sisa ${formatRupiah(sisaSetelahDp)} dicicil ${h.installmentCount}x)`, amount: dpBaru, type: 'in'
+        };
+        history.unshift(dpTr);
+        newTransactions.push(dpTr);
+      }
+
+      if (depBaru > depLama) {
+        const selisihDep = depBaru - depLama;
+        const depTr = {
+          date: payDate, houseId: h.id, unit: h.name, category: "Jaminan", subItem: "Deposit Kerusakan",
+          note: `Uang jaminan kerusakan (${h.tenant || h.name})`, amount: selisihDep, type: 'in'
+        };
+        history.unshift(depTr);
+        newTransactions.push(depTr);
+      }
+
+      saveData();
+      if (newTransactions.length > 0) {
+        newTransactions.forEach(tr => syncToGoogleSheets(tr));
+      } else {
+        syncToGoogleSheets(null);
+      }
+      renderApp();
+      closeModal('editHouseModal');
+    }
+
+    function vacateSingleUnit() {
+      const id = parseInt(document.getElementById('editHouseId').value, 10);
+      const h = houses.find(x => x.id === id);
+      if (!h) return;
+      if (!confirm(`Kosongkan ${h.name} (${h.tenant || 'unit ini'})?\nRiwayat mutasi pemasukan/pengeluaran lama tetap aman tersimpan.`)) return;
+
+      const logTr = {
+        date: new Date().toISOString().split('T')[0], houseId: h.id, unit: h.name,
+        category: "Arsip Kontrak", subItem: "Penyewa Selesai",
+        note: h.tenant ? `Kontrak selesai (Eks penyewa: ${h.tenant}, masuk ${formatRupiah(h.paidAmount)})` : `Unit dikosongkan`,
+        amount: 0, type: 'in'
+      };
+      history.unshift(logTr);
+
+      h.tenant = ""; h.phone = ""; h.email = ""; h.dpAmount = 0; h.paidAmount = 0;
+      h.depositAmount = 0; h.expenseAmount = 0; h.startDate = ""; h.endDate = ""; h.nextDueDate = ""; h.lastPaidDate = "";
+
+      saveData();
+      syncToGoogleSheets(logTr);
+      renderApp();
+      closeModal('editHouseModal');
+    }
+
+    function deleteSingleUnitPermanent() {
+      const id = parseInt(document.getElementById('editHouseId').value, 10);
+      const h = houses.find(x => x.id === id);
+      if (!h) return;
+      if (!confirm(`Hapus permanen unit "${h.name}" dari daftar kontrakan?`)) return;
+      houses = houses.filter(x => x.id !== id);
+      saveData();
+      syncToGoogleSheets(null);
+      closeModal('editHouseModal');
+      goHome();
+      renderApp();
+    }
+
+    // ==================== ALARM & PENGINGAT RUTIN ====================
+    function getActiveAlarmsForSync() {
+      const list = [];
+      houses.forEach(h => {
+        const hasActivity = h.tenant || h.paidAmount > 0 || h.targetPrice > 0;
+        if (!hasActivity) return;
+
+        const namaPenyewa = h.tenant || "Belum Ada Penyewa";
+        const info = getInstallmentInfo(h);
+        const daysToDue = getDaysDiff(h.nextDueDate);
+
+        if (info.sisaTarget > 0 && daysToDue !== null && daysToDue <= 7) {
+          const statusWaktu = daysToDue < 0
+            ? `Telat ${Math.abs(daysToDue)} hari`
+            : (daysToDue === 0 ? `Jatuh tempo hari ini` : `${daysToDue} hari lagi`);
+
+          list.push({
+            unitName: `${h.name} • ${namaPenyewa}`,
+            desc: `Angsuran ke-${info.nextTermNumber} dari ${info.totalCount} • ${formatRupiah(info.currentDueNominal)}`,
+            highlight: `${statusWaktu} • Jatuh tempo ${formatDateIndo(h.nextDueDate)}`
+          });
+        }
+
+        const daysToEnd = getDaysDiff(h.endDate);
+        if (h.tenant && daysToEnd !== null && daysToEnd <= 7 && daysToEnd >= -30) {
+          const statusEnd = daysToEnd < 0 ? `Lewat ${Math.abs(daysToEnd)} hari` : `${daysToEnd} hari lagi`;
+          list.push({
+            unitName: `${h.name} • ${namaPenyewa}`,
+            desc: `Akhir masa kontrak (${formatDateIndo(h.endDate)})`,
+            highlight: `${statusEnd} • Jaminan: ${formatRupiah(h.depositAmount)}`
+          });
+        }
+      });
+
+      customAlarms.forEach(ca => {
+        const occ = getNextMonthlyOccurrenceInfo(ca.dayOfMonth);
+        const isDone = Array.isArray(ca.paidCycles) && ca.paidCycles.includes(occ.cycleKey);
+        if (occ.diffDays <= ca.leadDays) {
+          const statusRutin = isDone
+            ? `Selesai (${occ.dateStr})`
+            : (occ.diffDays < 0 ? `Lewat ${Math.abs(occ.diffDays)} hari` : (occ.diffDays === 0 ? `Hari ini` : `${occ.diffDays} hari lagi`));
+
+          list.push({
+            unitName: `${ca.title} • Setiap tgl ${ca.dayOfMonth}`,
+            desc: ca.note || `Pengingat tagihan rutin bulanan`,
+            highlight: statusRutin
+          });
+        }
+      });
+
+      return list;
+    }
+
+    function renderAlarms() {
+      const alarmList = document.getElementById('alarmList');
+      const homeBox = document.getElementById('homeUrgentAlarmBox');
+      const homeList = document.getElementById('homeUrgentAlarmList');
+      alarmList.innerHTML = '';
+      if (homeList) homeList.innerHTML = '';
+
+      let alerts = [], pendingCount = 0;
+
+      houses.forEach(h => {
+        const hasActivity = h.tenant || h.paidAmount > 0 || h.targetPrice > 0;
+        if (!hasActivity) return;
+
+        const namaPenyewa = h.tenant || "Belum Ada Penyewa";
+        const info = getInstallmentInfo(h);
+        const daysToDue = getDaysDiff(h.nextDueDate);
+
+        if (info.sisaTarget > 0 && daysToDue !== null && daysToDue <= 7) {
+          pendingCount++;
+          const statusBadge = daysToDue < 0
+            ? `Telat ${Math.abs(daysToDue)} hari`
+            : (daysToDue === 0 ? `Jatuh tempo hari ini` : `${daysToDue} hari lagi`);
+
+          alerts.push({
+            type: 'unit',
+            houseId: h.id,
+            unitName: h.name,
+            tenantName: namaPenyewa,
+            statusBadge: statusBadge,
+            isLate: daysToDue < 0,
+            desc: `Angsuran ke-${info.nextTermNumber} dari ${info.totalCount} • ${formatRupiah(info.currentDueNominal)}`,
+            highlight: `Sisa tagihan ${formatRupiah(info.sisaTarget)} • Jatuh tempo ${formatDateIndo(h.nextDueDate)}`,
+            phone: h.phone,
+            msg: `Halo ${h.tenant || 'Bapak/Ibu'}, menginformasikan tagihan ${h.name} untuk Angsuran ke-${info.nextTermNumber} dari ${info.totalCount} sebesar ${formatRupiah(info.currentDueNominal)} (jatuh tempo ${formatDateIndo(h.nextDueDate)}). Terima kasih.`
+          });
+        }
+
+        const daysToEnd = getDaysDiff(h.endDate);
+        if (h.tenant && daysToEnd !== null && daysToEnd <= 7 && daysToEnd >= -30) {
+          pendingCount++;
+          const statusBadge = daysToEnd < 0 ? `Lewat ${Math.abs(daysToEnd)} hari` : `${daysToEnd} hari lagi`;
+          alerts.push({
+            type: 'unit',
+            houseId: h.id,
+            unitName: h.name,
+            tenantName: namaPenyewa,
+            statusBadge: statusBadge,
+            isLate: daysToEnd < 0,
+            desc: `Masa kontrak berakhir pada ${formatDateIndo(h.endDate)}`,
+            highlight: `Uang jaminan tercatat: ${formatRupiah(h.depositAmount)}`,
+            phone: h.phone,
+            msg: `Halo ${h.tenant}, masa sewa ${h.name} akan berakhir pada ${formatDateIndo(h.endDate)}. Mohon konfirmasi apabila ingin memperpanjang kontrak ya. Terima kasih.`
+          });
+        }
+      });
+
+      customAlarms.forEach(ca => {
+        const occ = getNextMonthlyOccurrenceInfo(ca.dayOfMonth);
+        const isDone = Array.isArray(ca.paidCycles) && ca.paidCycles.includes(occ.cycleKey);
+        if (occ.diffDays <= ca.leadDays) {
+          if (!isDone) pendingCount++;
+          const statusBadge = isDone
+            ? `Selesai (${occ.dateStr})`
+            : (occ.diffDays < 0 ? `Lewat ${Math.abs(occ.diffDays)} hari` : (occ.diffDays === 0 ? `Hari ini` : `${occ.diffDays} hari lagi`));
+
+          alerts.push({
+            type: 'custom',
+            alarmId: ca.id,
+            cycleKey: occ.cycleKey,
+            isDone: isDone,
+            isLate: !isDone && occ.diffDays < 0,
+            unitName: ca.title,
+            tenantName: `Setiap tgl ${ca.dayOfMonth}`,
+            statusBadge: statusBadge,
+            desc: ca.note || `Pengingat tagihan rutin bulanan`,
+            highlight: isDone ? `Sudah dibayar bulan ini • Reset otomatis bulan depan` : `Tekan Done & Bayar untuk mencatat pengeluaran`
+          });
+        }
+      });
+
+      document.getElementById('alarmCount').textContent = pendingCount;
+
+      // Render Kotak Tagihan di Beranda
+      const urgentHomeAlerts = alerts.filter(a => !a.isDone);
+      if (homeBox && homeList) {
+        if (urgentHomeAlerts.length > 0) {
+          homeBox.style.display = 'block';
+          urgentHomeAlerts.forEach(a => {
+            let quickBtn = '';
+            if (a.type === 'unit') {
+              quickBtn = a.phone
+                ? `<a href="https://wa.me/${a.phone}?text=${encodeURIComponent(a.msg)}" target="_blank" class="btn btn-sm btn-wa">Tagih WA 💬</a>`
+                : `<button type="button" class="btn btn-sm btn-outline" onclick="openEditHouseModal(${a.houseId})">Isi No. WA</button>`;
+            } else {
+              quickBtn = `<button type="button" class="btn btn-sm btn-primary" onclick="doneCustomAlarm(${a.alarmId}, '${a.cycleKey}')">✅ Done</button>`;
+            }
+
+            const badgeColor = a.isLate ? 'background:var(--danger-light); color:var(--danger-red);' : 'background:var(--accent-orange-light); color:var(--accent-orange);';
+            const row = document.createElement('div');
+            row.style.cssText = "background:var(--card-white); padding:11px 13px; border-radius:12px; border:1px solid var(--border-soft); display:flex; justify-content:space-between; align-items:center; gap:10px;";
+            row.innerHTML = `
+              <div>
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:3px;">
+                  <strong style="font-size:0.86rem; color:var(--text-dark);">${a.unitName}</strong>
+                  <span style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">• ${a.tenantName}</span>
+                  <span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:20px; ${badgeColor}">${a.statusBadge}</span>
+                </div>
+                <div style="color:var(--text-muted); font-size:0.77rem; font-weight:600;">${a.desc}</div>
+              </div>
+              ${quickBtn}
+            `;
+            homeList.appendChild(row);
+          });
+        } else {
+          homeBox.style.display = 'none';
+        }
+      }
+
+      if (alerts.length === 0) {
+        alarmList.innerHTML = `<li class="alarm-item" style="grid-template-columns:1fr;"><div class="alarm-item-desc">✅ Belum ada tagihan jatuh tempo. Ketuk <strong>"Tambahkan Pengingat"</strong> di pojok kanan atas untuk membuat jadwal baru.</div></li>`;
+        return;
+      }
+
+      alerts.forEach(a => {
+        const li = document.createElement('li');
+        li.className = 'alarm-item';
+        if (a.isDone) { li.style.opacity = '0.78'; li.style.borderColor = 'var(--primary-green)'; }
+
+        let btnHtml = '';
+        if (a.type === 'unit') {
+          btnHtml = a.phone
+            ? `<a href="https://wa.me/${a.phone}?text=${encodeURIComponent(a.msg)}" target="_blank" class="btn btn-sm btn-wa">Kirim WA 💬</a>`
+            : `<button type="button" class="btn btn-sm btn-outline" onclick="openEditHouseModal(${a.houseId})">Isi No. WA</button>`;
+        } else if (a.type === 'custom') {
+          btnHtml = a.isDone
+            ? `<span class="status-pill pill-lunas">✓ Selesai</span>`
+            : `<button type="button" class="btn btn-sm btn-primary" onclick="doneCustomAlarm(${a.alarmId}, '${a.cycleKey}')">✅ Done & Bayar</button>`;
+        }
+
+        const badgeColor = a.isDone
+          ? 'background:var(--primary-light); color:var(--primary-green);'
+          : (a.isLate ? 'background:var(--danger-light); color:var(--danger-red);' : 'background:var(--accent-orange-light); color:var(--accent-orange);');
+
+        li.innerHTML = `
+          <div>
+            <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:4px;">
+              <strong style="font-size:0.92rem; color:var(--text-dark);">${a.unitName}</strong>
+              <span style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">• ${a.tenantName}</span>
+              <span style="font-size:0.72rem; font-weight:800; padding:2px 9px; border-radius:20px; ${badgeColor}">${a.statusBadge}</span>
+            </div>
+            <div class="alarm-item-desc" style="font-weight:600; color:var(--text-dark);">${a.desc}</div>
+            <div class="alarm-item-highlight" style="${a.isDone ? 'color:var(--primary-green);' : ''}">${a.highlight}</div>
+          </div>
+          ${btnHtml}
+        `;
+        alarmList.appendChild(li);
+      });
+    }
+
+    function doneCustomAlarm(alarmId, cycleKey) {
+      const ca = customAlarms.find(x => x.id === alarmId);
+      if (!ca) return;
+      const inputStr = prompt(`Konfirmasi pembayaran "${ca.title}".\nMasukkan nominal yang dibayar (angka saja, isi 0 jika hanya tandai selesai):`, ca.nominal > 0 ? String(ca.nominal) : '');
+      if (inputStr === null) return;
+      const amount = parseInt(inputStr.replace(/[^0-9]/g, ''), 10) || 0;
+
+      if (!Array.isArray(ca.paidCycles)) ca.paidCycles = [];
+      if (!ca.paidCycles.includes(cycleKey)) ca.paidCycles.push(cycleKey);
+
+      let newExp = null;
+      if (amount > 0) {
+        sharedExpenseTotal += amount;
+        newExp = {
+          date: new Date().toISOString().split('T')[0], houseId: "ALL", unit: "Pengeluaran Bersama",
+          category: "Pengeluaran Rutin", subItem: ca.title, note: `Done dari Alarm (Jadwal tgl ${ca.dayOfMonth})`,
+          amount: amount, type: 'out'
+        };
+        history.unshift(newExp);
+      }
+      saveData(); syncToGoogleSheets(newExp); renderApp();
+    }
+
+    function openCustomAlarmModal() {
+      document.getElementById('caTitle').value = '';
+      document.getElementById('caDay').value = '5';
+      document.getElementById('caNominalVis').value = '';
+      document.getElementById('caNominalReal').value = '0';
+      document.getElementById('caNote').value = '';
+      renderCustomAlarmManageList();
+      document.getElementById('customAlarmModal').classList.add('open');
+    }
+
+    function renderCustomAlarmManageList() {
+      const listEl = document.getElementById('customAlarmManageList');
+      listEl.innerHTML = customAlarms.length === 0
+        ? `<li style="font-size:0.78rem; color:var(--text-muted); font-style:italic;">Belum ada pengingat rutin tersimpan.</li>`
+        : customAlarms.map(ca => `
+            <li style="display:flex; justify-content:space-between; align-items:center; background:var(--mini-box-bg); padding:8px 12px; border-radius:10px; border:1px solid var(--border-soft); font-size:0.8rem;">
+              <div><strong>${ca.title}</strong><div style="font-size:0.72rem; color:var(--text-muted);">Tiap tgl ${ca.dayOfMonth} • H-${ca.leadDays}</div></div>
+              <button type="button" class="btn btn-sm btn-danger-soft" onclick="deleteCustomAlarm(${ca.id})">Hapus</button>
+            </li>
+          `).join('');
+    }
+
+    function addCustomAlarm(e) {
+      e.preventDefault();
+      const title = document.getElementById('caTitle').value.trim();
+      const day = Math.min(31, Math.max(1, parseInt(document.getElementById('caDay').value, 10) || 1));
+      const leadDays = Math.max(1, parseInt(document.getElementById('caLeadDays').value, 10) || 7);
+      const nominal = parseInt(document.getElementById('caNominalReal').value, 10) || 0;
+      const rawNote = document.getElementById('caNote').value.trim();
+      if (!title) return;
+
+      const note = nominal > 0 ? `Estimasi ${formatRupiah(nominal)}${rawNote ? ' • ' + rawNote : ''}` : rawNote;
+      customAlarms.push({ id: Date.now(), title, dayOfMonth: day, leadDays, nominal, note, paidCycles: [] });
+      saveData(); syncToGoogleSheets(null); renderCustomAlarmManageList(); renderAlarms();
+      document.getElementById('caTitle').value = '';
+    }
+
+    function deleteCustomAlarm(id) {
+      customAlarms = customAlarms.filter(x => x.id !== id);
+      saveData(); syncToGoogleSheets(null); renderCustomAlarmManageList(); renderAlarms();
+    }
+
+    // ==================== MODAL PEMASUKAN & PENGELUARAN ====================
+    function populateHouseSelect(selectId, selectedId = null) {
+      const sel = document.getElementById(selectId);
+      sel.innerHTML = houses.map(h => `<option value="${h.id}" ${selectedId === h.id ? 'selected' : ''}>${h.name} ${h.tenant ? '(' + h.tenant + ')' : '(Kosong)'}</option>`).join('');
+    }
+
+    function openIncomeModal(houseId = null) {
+      if (houses.length === 0) return alert("Tambahkan unit kontrakan terlebih dahulu!");
+      populateHouseSelect('incHouseId', houseId || houses[0].id);
+      document.getElementById('incType').value = 'Angsuran';
+      document.getElementById('incDate').value = new Date().toISOString().split('T')[0];
+      autoFillInstallmentSuggestion();
+      document.getElementById('incomeModal').classList.add('open');
+    }
+
+    function autoFillInstallmentSuggestion() {
+      const h = houses.find(x => x.id === parseInt(document.getElementById('incHouseId').value, 10));
+      const type = document.getElementById('incType').value;
+      const hint = document.getElementById('incHintLabel');
+      if (!h) return;
+      const info = getInstallmentInfo(h);
+      if (type === 'Angsuran' && info.sisaTarget > 0) {
+        document.getElementById('incAmount').value = info.currentDueNominal;
+        document.getElementById('incAmountDisplay').value = formatDots(info.currentDueNominal);
+        document.getElementById('incNote').value = `Angsuran ke-${info.nextTermNumber}/${info.totalCount}`;
+        hint.textContent = `(Tagihan termin ke-${info.nextTermNumber}/${info.totalCount})`;
+      } else {
+        document.getElementById('incAmount').value = '';
+        document.getElementById('incAmountDisplay').value = '';
+        document.getElementById('incNote').value = '';
+        hint.textContent = '';
+      }
+    }
+
+    function submitIncome(e) {
+      e.preventDefault();
+      const house = houses.find(h => h.id === parseInt(document.getElementById('incHouseId').value, 10));
+      const type = document.getElementById('incType').value;
+      const amount = parseInt(document.getElementById('incAmount').value, 10) || 0;
+      const date = document.getElementById('incDate').value;
+      const note = document.getElementById('incNote').value;
+      if (!house || amount <= 0) return;
+
+      if (type === 'Jaminan') {
+        house.depositAmount += amount;
+      } else {
+        if (type === 'DP') house.dpAmount = (house.dpAmount || 0) + amount;
+        house.paidAmount += amount;
+        house.lastPaidDate = date;
+        house.nextDueDate = house.paidAmount < house.targetPrice ? addMonthsToDateStr(date, getSchemeIntervalMonths(house.installmentCount)) : '';
+      }
+
+      const newTr = { date, houseId: house.id, unit: house.name, category: type, subItem: type === 'Jaminan' ? 'Deposit' : house.scheme, note, amount, type: 'in' };
+      history.unshift(newTr);
+      saveData(); syncToGoogleSheets(newTr); renderApp(); closeModal('incomeModal');
+    }
+
+    function openExpenseModal() {
+      populateHouseSelect('expHouseId', houses[0] ? houses[0].id : 1);
+      document.getElementById('expMode').value = 'serempak';
+      toggleExpenseHouseSelect();
+      renderSubCategoryDropdown();
+      document.getElementById('expAmountDisplay').value = '';
+      document.getElementById('expAmount').value = '';
+      document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('expNote').value = '';
+      document.getElementById('expenseModal').classList.add('open');
+    }
+
+    function toggleExpenseHouseSelect() {
+      document.getElementById('expHouseGroup').style.display = document.getElementById('expMode').value === 'per_rumah' ? 'block' : 'none';
+    }
+
+    function renderSubCategoryDropdown() {
+      const cat = document.getElementById('expCategory').value;
+      document.getElementById('expSubItem').innerHTML = (subCategories[cat] || []).map(it => `<option value="${it}">${it}</option>`).join('');
+    }
+
+    function addSubItem() {
+      const cat = document.getElementById('expCategory').value;
+      const val = document.getElementById('newSubItemInput').value.trim();
+      if (!val) return;
+      if (!subCategories[cat].includes(val)) { subCategories[cat].push(val); saveData(); renderSubCategoryDropdown(); }
+      document.getElementById('expSubItem').value = val;
+      document.getElementById('newSubItemInput').value = '';
+    }
+
+    function submitExpense(e) {
+      e.preventDefault();
+      const mode = document.getElementById('expMode').value;
+      const category = document.getElementById('expCategory').value;
+      const subItem = document.getElementById('expSubItem').value;
+      const amount = parseInt(document.getElementById('expAmount').value, 10) || 0;
+      const date = document.getElementById('expDate').value;
+      const note = document.getElementById('expNote').value;
+      if (amount <= 0) return;
+
+      let newExp;
+      if (mode === 'serempak') {
+        sharedExpenseTotal += amount;
+        newExp = { date, houseId: "ALL", unit: "Pengeluaran Bersama", category, subItem, note, amount, type: 'out' };
+      } else {
+        const house = houses.find(h => h.id === parseInt(document.getElementById('expHouseId').value, 10));
+        house.expenseAmount += amount;
+        newExp = { date, houseId: house.id, unit: house.name, category, subItem, note, amount, type: 'out' };
+      }
+      history.unshift(newExp);
+      saveData(); syncToGoogleSheets(newExp); renderApp(); closeModal('expenseModal');
+    }
+
+    // ==================== MUTASI, PIN, BACKUP & HOLD RESET ====================
+    function populateMutasiFilters() {
+      const fUnit = document.getElementById('filterUnit');
+      const prev = fUnit.value || 'ALL';
+      fUnit.innerHTML = `<option value="ALL">Semua Sumber</option><option value="SEREMPAK">Pengeluaran Bersama</option>` +
+        houses.map(h => `<option value="${h.id}">${h.name}</option>`).join('');
+      fUnit.value = prev;
+
+      const fPeriod = document.getElementById('filterPeriod');
+      const prevP = fPeriod.value || 'ALL';
+      const periods = new Set(history.filter(x => x.date).map(x => x.date.slice(0, 7)));
+      fPeriod.innerHTML = `<option value="ALL">Semua Waktu</option>` + Array.from(periods).sort().reverse().map(ym => `<option value="${ym}">${ym}</option>`).join('');
+      fPeriod.value = prevP;
+    }
+
+    function renderHistory() {
+      const tbody = document.getElementById('historyBody');
+      tbody.innerHTML = '';
+      const fUnit = document.getElementById('filterUnit').value;
+      const fType = document.getElementById('filterType').value;
+      const fCat = document.getElementById('filterCategory').value;
+      const fPeriod = document.getElementById('filterPeriod').value;
+      let sumIn = 0, sumOut = 0;
+
+      const sortedHistory = [...history].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      sortedHistory.forEach(item => {
+        if (fUnit === 'SEREMPAK' && item.houseId !== 'ALL') return;
+        if (fUnit !== 'ALL' && fUnit !== 'SEREMPAK' && String(item.houseId) !== String(fUnit)) return;
+        if (fType !== 'ALL' && item.type !== fType) return;
+        if (fCat !== 'ALL' && item.category !== fCat) return;
+        if (fPeriod !== 'ALL' && !item.date.startsWith(fPeriod)) return;
+
+        if (item.type === 'in') sumIn += item.amount;
+        if (item.type === 'out') sumOut += item.amount;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDateIndo(item.date)}</td>
+          <td><strong>${item.unit}</strong></td>
+          <td>${item.category}${item.subItem ? ' • ' + item.subItem : ''}</td>
+          <td>${item.note}</td>
+          <td class="col-num tag-in">${item.type === 'in' ? formatRupiah(item.amount) : '-'}</td>
+          <td class="col-num tag-out">${item.type === 'out' ? formatRupiah(item.amount) : '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('mutasiSumIn').textContent = formatRupiah(sumIn);
+      document.getElementById('mutasiSumOut').textContent = formatRupiah(sumOut);
+    }
+
+    function togglePinEye(inputId, btnEl) {
+      const inp = document.getElementById(inputId);
+      if (!inp) return;
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        btnEl.textContent = '🙈';
+      } else {
+        inp.type = 'password';
+        btnEl.textContent = '👁️';
+      }
+    }
+
+    function openPinSecurityModal() {
+      const pinChk = document.getElementById('pinInputCheck');
+      pinChk.value = '';
+      pinChk.type = 'password';
+      document.getElementById('pinVerifyStep').style.display = 'block';
+      document.getElementById('pinUnlockedStep').style.display = 'none';
+      document.getElementById('pinModal').classList.add('open');
+    }
+
+    function verifyPinSubmit(e) {
+      e.preventDefault();
+      if (document.getElementById('pinInputCheck').value.trim() !== securityPin) return alert("PIN salah!");
+      document.getElementById('pinVerifyStep').style.display = 'none';
+      document.getElementById('pinUnlockedStep').style.display = 'block';
+
+      const sel = document.getElementById('corrHouseSelect');
+      sel.innerHTML =
+        `<option value="NET_SALDO">💰 Saldo Bersih</option>` +
+        `<option value="SHARED">🏢 Pengeluaran Bersama</option>` +
+        houses.map(h => `<option value="${h.id}">${h.name}${h.tenant ? ' (' + h.tenant + ')' : ''}</option>`).join('');
+
+      switchPinTab('koreksi');
+      loadCorrectionValues();
+    }
+
+    function switchPinTab(tab) {
+      const isKoreksi = tab === 'koreksi';
+      document.getElementById('pinTabKoreksi').style.display = isKoreksi ? 'block' : 'none';
+      document.getElementById('pinTabSetPin').style.display = isKoreksi ? 'none' : 'block';
+
+      const btnKor = document.getElementById('btnTabKoreksi');
+      const btnPin = document.getElementById('btnTabSetPin');
+      if (btnKor && btnPin) {
+        btnKor.className = isKoreksi ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline';
+        btnPin.className = !isKoreksi ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline';
+      }
+    }
+
+    function getCurrentNetSaldo() {
+      let totalIn = 0, totalUnitExp = 0;
+      houses.forEach(h => {
+        totalIn += h.paidAmount;
+        totalUnitExp += h.expenseAmount;
+      });
+      return totalIn - (totalUnitExp + sharedExpenseTotal);
+    }
+
+    function loadCorrectionValues() {
+      const corrDateEl = document.getElementById('corrDate');
+      if (corrDateEl && !corrDateEl.value) {
+        corrDateEl.value = new Date().toISOString().split('T')[0];
+      }
+      const val = document.getElementById('corrHouseSelect').value;
+      document.getElementById('corrUnitFields').style.display = 'none';
+      document.getElementById('corrSharedFields').style.display = 'none';
+      document.getElementById('corrNetSaldoFields').style.display = 'none';
+
+      if (val === 'NET_SALDO') {
+        document.getElementById('corrNetSaldoFields').style.display = 'block';
+        const curNet = getCurrentNetSaldo();
+        document.getElementById('corrNetSaldo').value = Math.max(0, curNet);
+        document.getElementById('corrNetSaldoVis').value = formatDots(curNet);
+        return;
+      }
+
+      if (val === 'SHARED') {
+        document.getElementById('corrSharedFields').style.display = 'block';
+        document.getElementById('corrSharedExp').value = sharedExpenseTotal;
+        document.getElementById('corrSharedExpVis').value = formatDots(sharedExpenseTotal);
+        return;
+      }
+
+      document.getElementById('corrUnitFields').style.display = 'block';
+      const h = houses.find(x => x.id === parseInt(val, 10));
+      if (!h) return;
+      document.getElementById('corrPaid').value = h.paidAmount; document.getElementById('corrPaidVis').value = formatDots(h.paidAmount);
+      document.getElementById('corrExp').value = h.expenseAmount; document.getElementById('corrExpVis').value = formatDots(h.expenseAmount);
+      document.getElementById('corrDep').value = h.depositAmount; document.getElementById('corrDepVis').value = formatDots(h.depositAmount);
+    }
+
+    function submitCorrection(e) {
+      e.preventDefault();
+      const val = document.getElementById('corrHouseSelect').value;
+      const reason = document.getElementById('corrReason').value.trim();
+      const todayStr = document.getElementById('corrDate').value || new Date().toISOString().split('T')[0];
+
+      if (val === 'NET_SALDO') {
+        const targetNet = parseInt(document.getElementById('corrNetSaldo').value, 10) || 0;
+        const currentNet = getCurrentNetSaldo();
+        const diff = targetNet - currentNet;
+
+        if (diff === 0) {
+          closeModal('pinModal');
+          return;
+        }
+
+        // Sesuaikan melalui komponen pengeluaran bersama agar Saldo Bersih tepat sesuai angka koreksi
+        sharedExpenseTotal = sharedExpenseTotal - diff;
+
+        const trSaldo = {
+          date: todayStr,
+          houseId: 'ALL',
+          unit: 'Saldo Bersih',
+          category: 'Penyesuaian Saldo',
+          subItem: 'Koreksi PIN',
+          note: `Penyesuaian Saldo: ${reason} (Menjadi ${formatRupiah(targetNet)})`,
+          amount: Math.abs(diff),
+          type: diff > 0 ? 'in' : 'out'
+        };
+        history.unshift(trSaldo);
+        saveData();
+        syncToGoogleSheets(trSaldo);
+        renderApp();
+        closeModal('pinModal');
+        alert(`✅ Penyesuaian Saldo berhasil! Saldo Bersih kini ${formatRupiah(targetNet)} dan tercatat di Mutasi.`);
+        return;
+      }
+
+      if (val === 'SHARED') {
+        sharedExpenseTotal = parseInt(document.getElementById('corrSharedExp').value, 10) || 0;
+      } else {
+        const h = houses.find(x => x.id === parseInt(val, 10));
+        h.paidAmount = parseInt(document.getElementById('corrPaid').value, 10) || 0;
+        h.expenseAmount = parseInt(document.getElementById('corrExp').value, 10) || 0;
+        h.depositAmount = parseInt(document.getElementById('corrDep').value, 10) || 0;
+      }
+      const tr = {
+        date: todayStr,
+        houseId: val === 'SHARED' ? 'ALL' : parseInt(val, 10),
+        unit: val === 'SHARED' ? 'Pengeluaran Bersama' : 'Koreksi Unit',
+        category: 'Koreksi PIN',
+        subItem: 'Penyesuaian Saldo',
+        note: `Penyesuaian Saldo: ${reason}`,
+        amount: 0,
+        type: 'in'
+      };
+      history.unshift(tr);
+      saveData(); syncToGoogleSheets(tr); renderApp(); closeModal('pinModal');
+    }
+
+    function submitChangePin(e) {
+      e.preventDefault();
+      const p1 = document.getElementById('newPinInput').value.trim();
+      if (p1 !== document.getElementById('confirmPinInput').value.trim()) return alert("PIN tidak cocok!");
+      securityPin = p1; localStorage.setItem('om_v11_pin', securityPin);
+      document.getElementById('newPinInput').value = '';
+      document.getElementById('confirmPinInput').value = '';
+      closeModal('pinModal');
+      alert("✅ PIN Keamanan berhasil diperbarui!");
+    }
+
+    let holdResetTimer = null;
+    function startHoldReset(e) {
+      if (e && e.cancelable) e.preventDefault();
+      const btn = document.getElementById('btnResetHold');
+      if (!btn || holdResetTimer) return;
+      btn.classList.add('holding');
+      document.getElementById('holdResetText').textContent = "⏳ Terus tahan 3 detik...";
+      holdResetTimer = setTimeout(() => {
+        cancelHoldReset();
+        localStorage.clear();
+        houses = JSON.parse(JSON.stringify(defaultHouses));
+        sharedExpenseTotal = 0; history = []; customAlarms = [];
+        saveData(); syncToGoogleSheets(null); renderApp();
+        alert("✅ Seluruh data berhasil direset ke 0!");
+      }, 3000);
+    }
+
+    function cancelHoldReset() {
+      if (holdResetTimer) { clearTimeout(holdResetTimer); holdResetTimer = null; }
+      const btn = document.getElementById('btnResetHold');
+      if (btn) btn.classList.remove('holding');
+      const lbl = document.getElementById('holdResetText');
+      if (lbl) lbl.textContent = "🗑️ Tahan 3 Detik: Reset ke 0";
+    }
+
+    function exportBackupJSON() {
+      const blob = new Blob([JSON.stringify({ houses, sharedExpenseTotal, history, subCategories, customAlarms }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `Backup_Kontrakan_${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+    }
+
+    function importBackupJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          houses = data.houses || houses;
+          sharedExpenseTotal = data.sharedExpenseTotal || 0;
+          history = data.history || [];
+          customAlarms = data.customAlarms || [];
+          saveData(); syncToGoogleSheets(null); renderApp(); alert("Data berhasil dipulihkan!");
+        } catch (err) { alert("File backup tidak valid."); }
+      };
+      reader.readAsText(file);
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    applyTheme();
+    renderApp();
+  </script>
+</body>
+</html>
